@@ -30,7 +30,7 @@ unknown input, concurrent updates, and queue/history survival after a restart.
 
 ## 3. Traffic engine and operator intents
 
-Status: implemented and verified; awaiting review.
+Status: completed and reviewed.
 
 - Deterministic state machine with explicit deadlines and an injected clock.
 - Weighted scheduling, waiting-age protection, and safe timed transitions.
@@ -43,6 +43,8 @@ Review: domain tests for normal traffic, vehicle priority, starvation, manual
 commands, emergency precedence, and every GREEN/YELLOW/ALL RED transition.
 
 ## 4. Controller simulation, faults, and recovery
+
+Status: implemented and verified; awaiting review.
 
 - Durable commands through a controller interface and REST ACK simulation.
 - Desired/actual separation, command correlation, timeouts, stale ACKs, and faults.

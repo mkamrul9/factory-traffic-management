@@ -3,7 +3,6 @@ from typing import Annotated, cast
 from fastapi import APIRouter, Depends, Query, Request, Response
 
 from factory_traffic.api.schemas import (
-    AlertResponse,
     AuditEntryResponse,
     ErrorResponse,
     EventResponse,
@@ -13,12 +12,9 @@ from factory_traffic.api.schemas import (
     JunctionResponse,
     JunctionStatusResponse,
     SensorEventRequest,
-    WaitingVehicleResponse,
 )
+from factory_traffic.api.status import status_response
 from factory_traffic.application.traffic import TrafficService
-from factory_traffic.domain.events import VehicleType
-from factory_traffic.domain.models import Direction
-from factory_traffic.domain.signals import all_red_signals
 
 router = APIRouter(
     responses={
@@ -55,29 +51,7 @@ def get_junction(junction_id: JunctionId, service: Service) -> JunctionResponse:
 
 @router.get("/junctions/{junction_id}/status", tags=["Junctions"])
 def get_status(junction_id: JunctionId, service: Service) -> JunctionStatusResponse:
-    waiting = service.get_waiting(junction_id)
-    queues = {direction: 0 for direction in Direction}
-    for vehicle in waiting:
-        queues[vehicle.direction] += 1
-    emergency_directions = {
-        vehicle.direction for vehicle in waiting if vehicle.vehicle_type == VehicleType.EMERGENCY
-    }
-    return JunctionStatusResponse(
-        junction_id=junction_id,
-        desired_signals=all_red_signals(),
-        actual_signals={direction: "UNKNOWN" for direction in Direction},
-        queues=queues,
-        queued_vehicles=[WaitingVehicleResponse.model_validate(vehicle) for vehicle in waiting],
-        emergency_directions=[
-            direction for direction in Direction if direction in emergency_directions
-        ],
-        alerts=[
-            AlertResponse(
-                code="CONTROL_NOT_READY",
-                message="Traffic engine and controller confirmation are not active yet.",
-            )
-        ],
-    )
+    return status_response(service.get_snapshot(junction_id))
 
 
 @router.post(

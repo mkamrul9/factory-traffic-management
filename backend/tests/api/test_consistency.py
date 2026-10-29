@@ -15,8 +15,8 @@ from factory_traffic.persistence.sqlite import SQLiteTransaction
 def test_parallel_duplicate_submissions_across_service_instances_apply_once(tmp_path: Path) -> None:
     path = tmp_path / "traffic.sqlite3"
     with (
-        TestClient(create_app(path, clock=lambda: NOW)) as first,
-        TestClient(create_app(path, clock=lambda: NOW)) as second,
+        TestClient(create_app(path, clock=lambda: NOW, run_background_tasks=False)) as first,
+        TestClient(create_app(path, clock=lambda: NOW, run_background_tasks=False)) as second,
     ):
         clients = (first, second)
 
@@ -38,8 +38,8 @@ def test_event_id_uniqueness_is_global_even_during_concurrent_junction_requests(
 ) -> None:
     path = tmp_path / "traffic.sqlite3"
     with (
-        TestClient(create_app(path, clock=lambda: NOW)) as first,
-        TestClient(create_app(path, clock=lambda: NOW)) as second,
+        TestClient(create_app(path, clock=lambda: NOW, run_background_tasks=False)) as first,
+        TestClient(create_app(path, clock=lambda: NOW, run_background_tasks=False)) as second,
     ):
         first.post("/api/junctions", json={"junction_id": "B", "name": "Bay"})
 
@@ -85,7 +85,12 @@ def test_concurrent_arrivals_have_no_lost_accepted_updates(client: TestClient) -
         assert accepted >= 1
     assert sum(status["queues"].values()) == len(status["queued_vehicles"])
     entries = client.get("/api/junctions/A/history").json()["items"]
-    assert len(entries) == 25
+    attempts = [
+        entry
+        for entry in entries
+        if entry["event_type"] in ("VEHICLE_ARRIVED", "SENSOR_EVENT_IGNORED")
+    ]
+    assert len(attempts) == 24
 
 
 def test_concurrent_clearances_never_make_a_queue_negative(client: TestClient) -> None:
@@ -113,15 +118,16 @@ def test_database_failure_rolls_back_queue_receipt_cursor_and_history(
     def fail_audit(self: SQLiteTransaction, entry: AuditEntry) -> None:
         raise sqlite3.OperationalError("simulated database failure")
 
+    baseline = len(client.get("/api/junctions/A/history?limit=100").json()["items"])
     with monkeypatch.context() as patch:
         patch.setattr(SQLiteTransaction, "add_audit", fail_audit)
         response = client.post("/api/sensor-events", json=sensor_event())
     assert response.status_code == 503
     assert response.json()["error"]["code"] == "STORAGE_UNAVAILABLE"
     with closing(sqlite3.connect(tmp_path / "traffic.sqlite3")) as connection:
-        for table in ("waiting_vehicles", "sensor_event_receipts", "sequence_cursors"):
+        for table in ("waiting_vehicles", "event_receipts", "sequence_cursors"):
             assert connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] == 0
-        assert connection.execute("SELECT COUNT(*) FROM audit_history").fetchone()[0] == 1
+        assert connection.execute("SELECT COUNT(*) FROM audit_history").fetchone()[0] == baseline
     retry = client.post("/api/sensor-events", json=sensor_event())
     assert retry.status_code == 200
     assert retry.json()["duplicate"] is False

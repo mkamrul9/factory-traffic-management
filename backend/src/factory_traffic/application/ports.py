@@ -1,8 +1,14 @@
+from collections.abc import Sequence
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 
+from factory_traffic.domain.controller import (
+    ControllerAcknowledgement,
+    ControllerCommand,
+    JunctionRuntime,
+)
 from factory_traffic.domain.events import EventOutcome, WaitingVehicle
 from factory_traffic.domain.models import Direction, JunctionConfiguration
 
@@ -40,6 +46,26 @@ class AuditEntry:
     id: int = 0
 
 
+@dataclass(frozen=True)
+class OperationResult:
+    junction_id: str
+    outcome: EventOutcome
+    code: str
+    message: str
+    status_code: int = 200
+    duplicate: bool = False
+
+
+@dataclass(frozen=True)
+class JunctionSnapshot:
+    configuration: JunctionConfiguration
+    runtime: JunctionRuntime
+    waiting: list[WaitingVehicle]
+    pending_commands: list[ControllerCommand]
+    sequence_numbers: dict[Direction, int | None]
+    timestamp: datetime
+
+
 class TrafficTransaction(Protocol):
     def get_junction(self, junction_id: str) -> JunctionRecord | None: ...
     def list_junctions(self) -> list[JunctionRecord]: ...
@@ -56,6 +82,13 @@ class TrafficTransaction(Protocol):
     def list_history(
         self, junction_id: str, limit: int, before_id: int | None
     ) -> list[AuditEntry]: ...
+    def get_runtime(self, junction_id: str) -> JunctionRuntime | None: ...
+    def save_runtime(self, runtime: JunctionRuntime) -> None: ...
+    def get_command(self, command_id: str) -> ControllerCommand | None: ...
+    def save_command(self, command: ControllerCommand) -> None: ...
+    def list_commands(
+        self, junction_id: str, *, batch_id: str | None = None, pending_only: bool = False
+    ) -> list[ControllerCommand]: ...
 
 
 class TrafficRepository(Protocol):
@@ -63,3 +96,11 @@ class TrafficRepository(Protocol):
     def transaction(
         self, *, read_only: bool = False
     ) -> AbstractContextManager[TrafficTransaction]: ...
+
+
+class ControllerPort(Protocol):
+    def execute(
+        self, commands: Sequence[ControllerCommand], now: datetime
+    ) -> tuple[ControllerAcknowledgement, ...]:
+        """Dispatch committed commands; returned replies are explicit controller evidence."""
+        ...

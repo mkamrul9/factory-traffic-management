@@ -1,14 +1,28 @@
+import logging
 from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime
 from threading import Lock
 
+from factory_traffic.application.clock import MonotonicClock
+from factory_traffic.application.control import ControlCoordinator
 from factory_traffic.application.ports import (
     AuditEntry,
+    ControllerPort,
     EventReceipt,
     JunctionRecord,
+    JunctionSnapshot,
+    OperationResult,
     TrafficRepository,
     TrafficTransaction,
+)
+from factory_traffic.controllers.rest_simulator import RestControllerSimulator
+from factory_traffic.domain.controller import (
+    ControllerAcknowledgement,
+    ControllerCommand,
+    DeviceEvent,
+    DeviceStatus,
+    OperatorCommand,
 )
 from factory_traffic.domain.events import (
     EventOutcome,
@@ -17,7 +31,9 @@ from factory_traffic.domain.events import (
     WaitingVehicle,
     evaluate_vehicle_event,
 )
-from factory_traffic.domain.models import DEFAULT_JUNCTION, JunctionConfiguration
+from factory_traffic.domain.models import DEFAULT_JUNCTION, Direction, JunctionConfiguration
+
+logger = logging.getLogger(__name__)
 
 
 class JunctionNotFound(Exception):
@@ -32,10 +48,13 @@ class TrafficService:
     def __init__(
         self,
         repository: TrafficRepository,
-        clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+        clock: Callable[[], datetime] | None = None,
+        controller: ControllerPort | None = None,
     ) -> None:
         self.repository = repository
-        self.clock = clock
+        self.clock = MonotonicClock() if clock is None else clock
+        self.controller = RestControllerSimulator() if controller is None else controller
+        self.control = ControlCoordinator()
         self._registry_lock = Lock()
         self._junction_locks: dict[str, Lock] = {}
 
@@ -49,15 +68,23 @@ class TrafficService:
         self.repository.initialize()
         with self.repository.transaction() as transaction:
             if transaction.get_junction(DEFAULT_JUNCTION.id) is None:
-                self._add_junction(transaction, DEFAULT_JUNCTION)
+                self._add_junction(transaction, DEFAULT_JUNCTION, initialize_control=False)
+            for record in transaction.list_junctions():
+                self.control.initialize(transaction, record, self.clock())
 
     def _add_junction(
-        self, transaction: TrafficTransaction, configuration: JunctionConfiguration
+        self,
+        transaction: TrafficTransaction,
+        configuration: JunctionConfiguration,
+        *,
+        initialize_control: bool = True,
     ) -> JunctionRecord:
         now = self.clock()
         record = JunctionRecord(configuration, now)
         transaction.add_junction(record)
         transaction.add_audit(AuditEntry(configuration.id, "JUNCTION_CREATED", now, {}))
+        if initialize_control:
+            self.control.initialize(transaction, record, now)
         return record
 
     def create_junction(self, configuration: JunctionConfiguration) -> JunctionRecord:
@@ -172,6 +199,9 @@ class TrafficService:
                 )
             transaction.add_receipt(receipt)
             self._audit_receipt(transaction, event, receipt)
+            if receipt.outcome == EventOutcome.ACCEPTED:
+                record = self._require_junction(transaction, event.junction_id)
+                self.control.advance(transaction, record, now)
             return receipt
 
     @staticmethod
@@ -212,3 +242,149 @@ class TrafficService:
                     event_id,
                 )
             )
+
+    def get_snapshot(self, junction_id: str) -> JunctionSnapshot:
+        with self.repository.transaction(read_only=True) as transaction:
+            record = self._require_junction(transaction, junction_id)
+            return JunctionSnapshot(
+                configuration=record.configuration,
+                runtime=self.control.runtime(transaction, junction_id),
+                waiting=transaction.list_waiting(junction_id),
+                pending_commands=transaction.list_commands(junction_id, pending_only=True),
+                sequence_numbers={
+                    direction: transaction.get_sequence(junction_id, direction)
+                    for direction in Direction
+                },
+                timestamp=self.clock(),
+            )
+
+    def pending_commands(self, junction_id: str) -> list[ControllerCommand]:
+        with self.repository.transaction(read_only=True) as transaction:
+            self._require_junction(transaction, junction_id)
+            return transaction.list_commands(junction_id, pending_only=True)
+
+    def execute_command(
+        self, junction_id: str, command: OperatorCommand, direction: Direction | None = None
+    ) -> OperationResult:
+        with self._lock_for(junction_id), self.repository.transaction() as transaction:
+            record = self._require_junction(transaction, junction_id)
+            now = self.clock()
+            runtime = self.control.advance(transaction, record, now)
+            return self.control.command(transaction, record, runtime, command, direction, now)
+
+    def process_acknowledgement(self, event: ControllerAcknowledgement) -> OperationResult:
+        with self._lock_for(event.junction_id), self.repository.transaction() as transaction:
+            record = self._require_junction(transaction, event.junction_id)
+            now = self.clock()
+            runtime = self.control.advance(transaction, record, now)
+            _, result = self.control.acknowledge(transaction, record, runtime, event, now)
+            return result
+
+    def process_device_event(self, event: DeviceEvent) -> EventReceipt:
+        with self._lock_for(event.junction_id), self.repository.transaction() as transaction:
+            return self.control.device_event(
+                transaction, transaction.get_junction(event.junction_id), event, self.clock()
+            )
+
+    def configure_simulator(self, junction_id: str, enabled: bool) -> OperationResult:
+        with self._lock_for(junction_id), self.repository.transaction() as transaction:
+            record = self._require_junction(transaction, junction_id)
+            now = self.clock()
+            runtime = self.control.advance(transaction, record, now)
+            if enabled and runtime.blocked_device():
+                return OperationResult(
+                    junction_id,
+                    EventOutcome.REJECTED,
+                    "DEVICE_UNAVAILABLE",
+                    "Bring unavailable devices ONLINE before enabling simulation.",
+                    409,
+                )
+            if enabled and runtime.fault_code is not None and not runtime.recovering:
+                runtime, _ = self.control.recover(transaction, record, runtime, now)
+            transaction.save_runtime(replace(runtime, simulator_auto_ack=enabled))
+            self.control.audit(
+                transaction, junction_id, "SIMULATOR_CONFIGURED", now, {"auto_ack": enabled}
+            )
+            return OperationResult(
+                junction_id,
+                EventOutcome.ACCEPTED,
+                "SIMULATOR_CONFIGURED",
+                "Automatic simulated acknowledgements enabled."
+                if enabled
+                else "Automatic simulated acknowledgements disabled.",
+            )
+
+    def simulate_batch(self, junction_id: str, batch_id: str) -> OperationResult:
+        # Read committed outbox records before interacting with any controller adapter.
+        with self.repository.transaction(read_only=True) as transaction:
+            self._require_junction(transaction, junction_id)
+            runtime = self.control.runtime(transaction, junction_id)
+            if runtime.batch_id != batch_id:
+                return OperationResult(
+                    junction_id,
+                    EventOutcome.REJECTED,
+                    "STALE_BATCH",
+                    "Batch is no longer current.",
+                    409,
+                )
+            if runtime.controller_status == DeviceStatus.OFFLINE or any(
+                status != DeviceStatus.ONLINE for status in runtime.signals.values()
+            ):
+                return OperationResult(
+                    junction_id,
+                    EventOutcome.REJECTED,
+                    "DEVICE_UNAVAILABLE",
+                    "Unavailable signals or controller cannot be simulated ONLINE.",
+                    409,
+                )
+            commands = transaction.list_commands(junction_id, batch_id=batch_id, pending_only=True)
+        if not commands:
+            return OperationResult(
+                junction_id,
+                EventOutcome.IGNORED,
+                "NO_PENDING_COMMANDS",
+                "This batch has no pending commands.",
+                duplicate=True,
+            )
+        acknowledgements = self.controller.execute(commands, self.clock())
+        with self._lock_for(junction_id), self.repository.transaction() as transaction:
+            record = self._require_junction(transaction, junction_id)
+            now = self.clock()
+            runtime = self.control.advance(transaction, record, now)
+            result = OperationResult(
+                junction_id,
+                EventOutcome.ACCEPTED,
+                "COMMANDS_DISPATCHED",
+                "Commands dispatched; awaiting controller evidence.",
+            )
+            for acknowledgement in acknowledgements:
+                runtime, current = self.control.acknowledge(
+                    transaction, record, runtime, acknowledgement, now
+                )
+                if result.outcome != EventOutcome.REJECTED:
+                    result = current
+            self.control.audit(
+                transaction,
+                junction_id,
+                "SIMULATOR_EXECUTED",
+                now,
+                {"batch_id": batch_id, "command_count": len(commands)},
+            )
+            return result
+
+    def tick_all(self) -> None:
+        for record in self.list_junctions():
+            junction_id = record.configuration.id
+            with self._lock_for(junction_id), self.repository.transaction() as transaction:
+                current = self._require_junction(transaction, junction_id)
+                runtime = self.control.advance(transaction, current, self.clock())
+                simulate = (
+                    runtime.simulator_auto_ack and runtime.controller_status != DeviceStatus.OFFLINE
+                )
+                simulate = simulate and all(
+                    status == DeviceStatus.ONLINE for status in runtime.signals.values()
+                )
+                batch_id = runtime.batch_id
+                pending = transaction.list_commands(junction_id, pending_only=True)
+            if simulate and batch_id is not None and pending:
+                self.simulate_batch(junction_id, batch_id)

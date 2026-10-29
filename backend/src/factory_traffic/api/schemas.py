@@ -6,12 +6,23 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    StrictBool,
     StringConstraints,
     field_validator,
     model_validator,
 )
 
 from factory_traffic.application.ports import EventReceipt, JunctionRecord
+from factory_traffic.domain.controller import (
+    AcknowledgementStatus,
+    CommandStatus,
+    ControllerAcknowledgement,
+    DeviceEvent,
+    DeviceStatus,
+    DeviceType,
+    OperatorCommand,
+)
+from factory_traffic.domain.engine import SignalStage
 from factory_traffic.domain.events import EventOutcome, SensorEvent, SensorEventType, VehicleType
 from factory_traffic.domain.models import (
     Direction,
@@ -150,16 +161,28 @@ class AlertResponse(BaseModel):
 
 class JunctionStatusResponse(BaseModel):
     junction_id: str
-    mode: Literal["DEGRADED"] = "DEGRADED"
-    phase: Literal["ALL_RED"] = "ALL_RED"
-    control_active: Literal[False] = False
-    controller_status: Literal["UNKNOWN"] = "UNKNOWN"
+    mode: str
+    phase: str
+    stage: SignalStage
+    target_phase_id: str | None
+    control_active: bool
+    controller_status: DeviceStatus
     desired_signals: dict[Direction, SignalColor]
-    actual_signals: dict[Direction, Literal["UNKNOWN"]]
+    actual_signals: dict[Direction, SignalColor | Literal["UNKNOWN"]]
     queues: dict[Direction, int]
     queued_vehicles: list[WaitingVehicleResponse]
     emergency_directions: list[Direction]
     alerts: list[AlertResponse]
+    awaiting_confirmation: bool
+    next_transition_at: datetime | None
+    manual_expires_at: datetime | None
+    batch_id: str | None
+    pending_commands: list["ControllerCommandResponse"]
+    simulator_auto_ack: bool
+    sensor_statuses: dict[Direction, DeviceStatus]
+    signal_statuses: dict[Direction, DeviceStatus]
+    sequence_numbers: dict[Direction, int | None]
+    server_time: datetime
 
 
 class AuditEntryResponse(BaseModel):
@@ -186,3 +209,106 @@ class ErrorDetail(BaseModel):
 
 class ErrorResponse(BaseModel):
     error: ErrorDetail
+
+
+class ControllerCommandResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    command_id: str
+    junction_id: str
+    batch_id: str
+    epoch: str
+    signal_version: int
+    direction: Direction
+    requested_state: SignalColor
+    requested_at: datetime
+    deadline: datetime
+    status: CommandStatus
+    actual_state: SignalColor | None
+    acknowledged_at: datetime | None
+
+
+class OperationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    junction_id: str
+    outcome: EventOutcome
+    code: str
+    message: str
+    duplicate: bool
+
+
+class OperatorCommandRequest(InputModel):
+    command: OperatorCommand
+    direction: Direction | None = None
+
+    @model_validator(mode="after")
+    def validate_direction(self) -> Self:
+        if self.command == OperatorCommand.MANUAL_GREEN_REQUEST and self.direction is None:
+            raise ValueError("MANUAL_GREEN_REQUEST requires a direction.")
+        if self.command != OperatorCommand.MANUAL_GREEN_REQUEST and self.direction is not None:
+            raise ValueError("Only MANUAL_GREEN_REQUEST takes a direction.")
+        return self
+
+
+class ControllerEventRequest(InputModel):
+    command_id: Identifier
+    junction_id: JunctionId
+    status: AcknowledgementStatus
+    actual_state: SignalColor | None = None
+    timestamp: AwareDatetime | None = None
+
+    @field_validator("timestamp", mode="before")
+    @classmethod
+    def require_timestamp_string(cls, value: object) -> object:
+        return None if value is None else SensorEventRequest.require_iso_timestamp(value)
+
+    @field_validator("timestamp")
+    @classmethod
+    def normalize_time(cls, value: datetime | None) -> datetime | None:
+        return None if value is None else SensorEventRequest.normalize_timestamp(value)
+
+    @model_validator(mode="after")
+    def require_actual_state(self) -> Self:
+        if self.status == AcknowledgementStatus.ACK and self.actual_state is None:
+            raise ValueError("ACK requires actual_state.")
+        return self
+
+    def to_domain(self) -> ControllerAcknowledgement:
+        return ControllerAcknowledgement(**self.model_dump())
+
+
+class DeviceEventRequest(InputModel):
+    event_id: Identifier
+    junction_id: JunctionId
+    device_type: DeviceType
+    status: DeviceStatus
+    direction: Direction | None = None
+    timestamp: AwareDatetime
+
+    @field_validator("timestamp", mode="before")
+    @classmethod
+    def require_timestamp_string(cls, value: object) -> object:
+        return SensorEventRequest.require_iso_timestamp(value)
+
+    @field_validator("timestamp")
+    @classmethod
+    def normalize_time(cls, value: datetime) -> datetime:
+        return SensorEventRequest.normalize_timestamp(value)
+
+    @model_validator(mode="after")
+    def require_device_direction(self) -> Self:
+        if self.device_type != DeviceType.SIGNAL_CONTROLLER and self.direction is None:
+            raise ValueError("A signal or sensor event requires a direction.")
+        return self
+
+    def to_domain(self) -> DeviceEvent:
+        return DeviceEvent(**self.model_dump())
+
+
+class SimulatorSettingsRequest(InputModel):
+    auto_ack: StrictBool
+
+
+class SimulatorBatchRequest(InputModel):
+    batch_id: Identifier

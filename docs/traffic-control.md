@@ -1,18 +1,18 @@
 # Traffic-control algorithm
 
 The engine in `domain/engine.py` is a standalone state machine. The application
-will supply a junction configuration, its waiting vehicles, operator commands,
+supplies a junction configuration, its waiting vehicles, operator commands,
 controller confirmations, and the current time. Each operation returns a new
 immutable state, domain events, and at most one signal request. Nothing in the
 engine imports FastAPI, SQLite, MQTT, or a timer implementation.
 
 ## Current integration boundary
 
-Domain scheduling and operator rules are implemented and tested. The running API
-does not call this engine yet; it continues to report control inactive and actual
-signals UNKNOWN. REST acknowledgements, background ticking, command timeouts,
-failure recovery, and persistence of engine runtime state are the next checkpoint.
-This prevents a simulated confirmation from being mistaken for physical evidence.
+The API now runs the engine through a transactional coordinator, persists its
+state and outgoing commands, and handles real-time ticking, REST acknowledgements,
+timeouts, and device failures. Physical confirmations come from explicit controller
+messages or opt-in simulated execution. Startup and recovery remain DEGRADED
+until fresh ALL RED confirmation and clearance. See [controller demonstration](controller-demo.md).
 
 To inspect the engine without a database or hardware, run from `backend/`:
 
@@ -54,10 +54,10 @@ After that GREEN is confirmed, the engine can immediately request its YELLOW sta
 
 Each call advances at most one signal stage. A late tick never skips multiple
 intervals to catch up. Time inputs must include a timezone and cannot move
-backwards. The runtime clock adapter must provide an elapsed-time-consistent
-timeline; a forward change to the operating-system wall clock must not shorten
-physical clearance. Restart must reconcile fresh ALL RED instead of replaying
-old deadlines. Those runtime responsibilities belong to the controller checkpoint.
+backwards. The runtime uses an elapsed monotonic timeline anchored to UTC, so a
+forward change to the operating-system wall clock cannot shorten clearance.
+Restart reconciles fresh ALL RED instead of replaying old deadlines. The application
+task advances the engine every 100 ms without blocking request handlers.
 
 ## Automatic scheduling
 
@@ -105,7 +105,9 @@ Emergency mode rejects manual requests. Emergency detection cancels an existing
 manual lease. After all emergencies clear or expire, the engine returns to
 automatic scheduling without restoring a previous manual override. A return-to-
 automatic command during an emergency cannot cancel that emergency's priority.
-Failure-mode rejection will be added with controller fault handling.
+Degraded or recovering control rejects manual and return-to-automatic intents.
+Only the explicit recovery command can start reconciliation, and it is rejected
+when devices remain unavailable or the junction is already healthy.
 
 ## Emergency selection and expiry
 

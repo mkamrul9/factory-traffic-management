@@ -192,9 +192,11 @@ def test_unknown_junction_has_a_durable_rejection_receipt(client: TestClient) ->
 
 def test_queues_receipts_and_sequence_cursors_survive_restart(tmp_path: Path) -> None:
     path = tmp_path / "traffic.sqlite3"
-    with TestClient(create_app(path, clock=lambda: NOW)) as first:
+    with TestClient(create_app(path, clock=lambda: NOW, run_background_tasks=False)) as first:
         first.post("/api/sensor-events", json=sensor_event(sequence_no=10))
-    with TestClient(create_app(path, clock=lambda: NOW + timedelta(seconds=10))) as second:
+    with TestClient(
+        create_app(path, clock=lambda: NOW + timedelta(seconds=10), run_background_tasks=False)
+    ) as second:
         response = second.post("/api/sensor-events", json=sensor_event(sequence_no=10))
         assert response.json()["duplicate"] is True
         assert response.json()["received_at"] == NOW.isoformat().replace("+00:00", "Z")
@@ -206,4 +208,10 @@ def test_queues_receipts_and_sequence_cursors_survive_restart(tmp_path: Path) ->
         status = second.get("/api/junctions/A/status").json()
         assert status["queues"]["NORTH"] == 1
         assert set(status["actual_signals"].values()) == {"UNKNOWN"}
-        assert len(second.get("/api/junctions/A/history").json()["items"]) == 4
+        kinds = [
+            entry["event_type"]
+            for entry in second.get("/api/junctions/A/history?limit=100").json()["items"]
+        ]
+        assert kinds.count("VEHICLE_ARRIVED") == 1
+        assert kinds.count("DUPLICATE_SENSOR_EVENT") == 1
+        assert kinds.count("SENSOR_EVENT_IGNORED") == 1

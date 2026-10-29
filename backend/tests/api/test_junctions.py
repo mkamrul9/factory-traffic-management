@@ -22,20 +22,21 @@ def test_startup_seeds_junction_a_without_assuming_physical_state(client: TestCl
 
 def test_junction_configuration_and_history_survive_restart(tmp_path: Path) -> None:
     path = tmp_path / "traffic.sqlite3"
-    with TestClient(create_app(path, clock=lambda: NOW)) as first:
+    with TestClient(create_app(path, clock=lambda: NOW, run_background_tasks=False)) as first:
         result = first.post(
             "/api/junctions",
             json={"junction_id": "B", "name": "Loading bay", "timings": {"green_seconds": 20}},
         )
         assert result.status_code == 201
         first_created = first.get("/api/junctions/A").json()["created_at"]
-    with TestClient(create_app(path, clock=lambda: NOW)) as second:
+    with TestClient(create_app(path, clock=lambda: NOW, run_background_tasks=False)) as second:
         record = second.get("/api/junctions/B").json()
         assert record["name"] == "Loading bay"
         assert record["timings"]["green_seconds"] == 20
         assert len(second.get("/api/junctions").json()) == 2
         assert second.get("/api/junctions/A").json()["created_at"] == first_created
-        assert len(second.get("/api/junctions/A/history").json()["items"]) == 1
+        entries = second.get("/api/junctions/A/history").json()["items"]
+        assert sum(entry["event_type"] == "JUNCTION_CREATED" for entry in entries) == 1
 
 
 def test_duplicate_junction_cannot_replace_existing_configuration(client: TestClient) -> None:
@@ -80,17 +81,22 @@ def test_history_pagination_remains_stable_when_new_events_arrive(client: TestCl
             ).status_code
             == 200
         )
+    original_ids = [
+        entry["id"] for entry in client.get("/api/junctions/A/history?limit=100").json()["items"]
+    ]
     first_page = client.get("/api/junctions/A/history?limit=2").json()
     cursor = first_page["next_before_id"]
     assert cursor is not None
     client.post(
         "/api/sensor-events", json=sensor_event(event_id="evt-4", vehicle_id="VH-4", sequence_no=4)
     )
-    second_page = client.get(f"/api/junctions/A/history?limit=2&before_id={cursor}").json()
-    ids = [entry["id"] for entry in first_page["items"] + second_page["items"]]
+    ids = [entry["id"] for entry in first_page["items"]]
+    while cursor is not None:
+        page = client.get(f"/api/junctions/A/history?limit=2&before_id={cursor}").json()
+        ids.extend(entry["id"] for entry in page["items"])
+        cursor = page["next_before_id"]
     assert ids == sorted(set(ids), reverse=True)
-    assert len(ids) == 4
-    assert second_page["next_before_id"] is None
+    assert ids == original_ids
     client.post("/api/junctions", json={"junction_id": "B", "name": "Bay"})
     assert all(
         entry["junction_id"] == "B"

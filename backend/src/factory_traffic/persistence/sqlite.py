@@ -15,13 +15,16 @@ from factory_traffic.application.ports import (
     StorageUnavailable,
     TrafficTransaction,
 )
+from factory_traffic.domain.controller import CommandStatus, ControllerCommand, JunctionRuntime
 from factory_traffic.domain.events import EventOutcome, VehicleType, WaitingVehicle
 from factory_traffic.domain.models import (
     Direction,
     JunctionConfiguration,
+    SignalColor,
     SignalTimings,
     TrafficPhase,
 )
+from factory_traffic.persistence.runtime_json import decode_runtime, encode_runtime
 
 
 class SQLiteRepository:
@@ -180,7 +183,7 @@ class SQLiteTransaction:
 
     def get_receipt(self, event_id: str) -> EventReceipt | None:
         row = self.connection.execute(
-            "SELECT * FROM sensor_event_receipts WHERE event_id = ?", (event_id,)
+            "SELECT * FROM event_receipts WHERE event_id = ?", (event_id,)
         ).fetchone()
         if row is None:
             return None
@@ -197,7 +200,7 @@ class SQLiteTransaction:
 
     def add_receipt(self, receipt: EventReceipt) -> None:
         self.connection.execute(
-            "INSERT INTO sensor_event_receipts "
+            "INSERT INTO event_receipts "
             "(event_id, junction_id, payload_json, outcome, code, message, "
             "received_at, status_code) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -259,3 +262,77 @@ class SQLiteTransaction:
             )
             for row in rows
         ]
+
+    def get_runtime(self, junction_id: str) -> JunctionRuntime | None:
+        row = self.connection.execute(
+            "SELECT state_json FROM junction_runtime WHERE junction_id = ?", (junction_id,)
+        ).fetchone()
+        return None if row is None else decode_runtime(row["state_json"])
+
+    def save_runtime(self, runtime: JunctionRuntime) -> None:
+        self.connection.execute(
+            "INSERT INTO junction_runtime (junction_id, state_json) VALUES (?, ?) "
+            "ON CONFLICT(junction_id) DO UPDATE SET state_json = excluded.state_json",
+            (runtime.engine.junction_id, encode_runtime(runtime)),
+        )
+
+    @staticmethod
+    def _command(row: sqlite3.Row) -> ControllerCommand:
+        return ControllerCommand(
+            command_id=row["command_id"],
+            junction_id=row["junction_id"],
+            batch_id=row["batch_id"],
+            epoch=row["epoch"],
+            signal_version=row["signal_version"],
+            direction=Direction(row["direction"]),
+            requested_state=SignalColor(row["requested_state"]),
+            requested_at=datetime.fromisoformat(row["requested_at"]),
+            deadline=datetime.fromisoformat(row["deadline"]),
+            status=CommandStatus(row["status"]),
+            actual_state=SignalColor(row["actual_state"]) if row["actual_state"] else None,
+            acknowledged_at=datetime.fromisoformat(row["acknowledged_at"])
+            if row["acknowledged_at"]
+            else None,
+        )
+
+    def get_command(self, command_id: str) -> ControllerCommand | None:
+        row = self.connection.execute(
+            "SELECT * FROM controller_commands WHERE command_id = ?", (command_id,)
+        ).fetchone()
+        return None if row is None else self._command(row)
+
+    def save_command(self, command: ControllerCommand) -> None:
+        self.connection.execute(
+            "INSERT INTO controller_commands "
+            "(command_id, junction_id, batch_id, epoch, signal_version, direction, "
+            "requested_state, "
+            "requested_at, deadline, status, actual_state, acknowledged_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(command_id) DO UPDATE SET status = excluded.status, "
+            "actual_state = excluded.actual_state, acknowledged_at = excluded.acknowledged_at",
+            (
+                command.command_id,
+                command.junction_id,
+                command.batch_id,
+                command.epoch,
+                command.signal_version,
+                command.direction,
+                command.requested_state,
+                command.requested_at.isoformat(),
+                command.deadline.isoformat(),
+                command.status,
+                command.actual_state,
+                command.acknowledged_at.isoformat() if command.acknowledged_at else None,
+            ),
+        )
+
+    def list_commands(
+        self, junction_id: str, *, batch_id: str | None = None, pending_only: bool = False
+    ) -> list[ControllerCommand]:
+        rows = self.connection.execute(
+            "SELECT * FROM controller_commands WHERE junction_id = ? "
+            "AND (? IS NULL OR batch_id = ?) AND (? = 0 OR status = 'PENDING') "
+            "ORDER BY requested_at, direction",
+            (junction_id, batch_id, batch_id, int(pending_only)),
+        ).fetchall()
+        return [self._command(row) for row in rows]

@@ -11,15 +11,23 @@ OpenAPI document is at [openapi.json](http://127.0.0.1:8000/openapi.json).
 - `POST /api/junctions`: create a junction using the default compatible groups.
 - `GET /api/junctions/{id}`: configuration and creation timestamp.
 - `GET /api/junctions/{id}/status`: queue counts, waiting vehicles, and current
-  control availability. Physical states remain UNKNOWN in this version.
+  mode/stage, desired/confirmed signals, device health, alerts, sequence cursors,
+  manual lease, pending commands, and simulator configuration.
 - `POST /api/sensor-events`: process one arrival or clearance.
 - `GET /api/junctions/{id}/history?limit=50&before_id=123`: newest-first audit
   history. Follow `next_before_id` until it is null. Limit is between 1 and 100.
 
-Manual commands and controller-event endpoints are not exposed yet. Their domain
-logic is implemented and can be inspected with `python -m factory_traffic.simulation`.
-The next integration step will connect engine state, ticking, and correlated
-controller acknowledgements to these APIs. Queue APIs continue to work as before.
+- `POST /api/junctions/{id}/commands`: manual intent, return to automatic, or recovery.
+- `GET /api/junctions/{id}/controller-commands`: committed pending direction commands.
+- `POST /api/controller-events`: correlate one physical ACK/FAILED report.
+- `POST /api/device-events`: controller, directional signal, or sensor health.
+- `POST /api/junctions/{id}/simulator`: enable/disable automatic simulated execution.
+- `POST /api/junctions/{id}/simulator/acknowledge`: explicitly execute one pending batch.
+
+See [controller demonstration](controller-demo.md) for those request bodies and
+the complete ACK, fault, and recovery policy. Simulation starts disabled after
+every restart. Queue ingestion continues even when control is degraded; it never
+silently treats an unavailable sensor's queue as empty.
 
 ## Create a junction
 
