@@ -1,0 +1,28 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "angular",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/frontend/browser",
+  "installCommand": "npm ci",
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "${BACKEND_URL}/api/$1",
+      "env": ["BACKEND_URL"],
+      "headers": { "Cache-Control": "no-store" }
+    },
+    {
+      "src": "/docs(.*)",
+      "dest": "${BACKEND_URL}/docs$1",
+      "env": ["BACKEND_URL"]
+    },
+    {
+      "src": "/openapi.json",
+      "dest": "${BACKEND_URL}/openapi.json",
+      "env": ["BACKEND_URL"],
+      "headers": { "Cache-Control": "no-store" }
+    },
+    { "handle": "filesystem" },
+    { "src": "/.*", "dest": "/index.html" }
+  ]
+}

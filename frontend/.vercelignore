@@ -1,0 +1,10 @@
+node_modules
+.angular
+.vscode
+.vercel
+dist
+coverage
+*.log
+.env*
+src/**/*.spec.ts
+src/app/core/status.fixture.ts

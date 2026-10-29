@@ -1,8 +1,8 @@
 # Factory Traffic Management System
 
 A factory junction controller built for the CSI Smart Tech backend assessment.
-The backend uses Python and FastAPI. SQLite stores vehicle queues and audit
-history, and an Angular dashboard provides the demonstration interface.
+The backend uses Python and FastAPI, with SQLite locally and PostgreSQL for the
+hosted demo. An Angular dashboard provides the demonstration interface.
 
 ## Current status
 
@@ -24,8 +24,9 @@ and requested signals, queues, alerts, manual controls, simulator inputs, and
 recent history. It supports creating and switching between junctions.
 
 All nine assessment scenarios have passed a live HTTP walkthrough. Clean-source
-installation, 292 backend tests, 28 frontend tests, and the optimized Angular
-build have been verified. See [submission notes](docs/submission.md) for the
+installation, 292 core backend tests, 19 additional hosting/storage tests,
+28 frontend tests, and the optimized Angular build have been verified.
+See [submission notes](docs/submission.md) for the
 deliverable checklist, verification scope, limitations, and technical review tour.
 
 ## Run locally
@@ -62,11 +63,19 @@ Simulation workbench to add and clear vehicles. See the
 Both development servers bind to localhost. Angular proxies `/api/**` requests to
 the backend; there is no additional frontend environment file to configure.
 
+For a hosted demo, see [deployment setup](docs/deployment.md). It uses Vercel for
+the dashboard, Render Free for the backend, and Neon Free PostgreSQL for durable
+storage. Free Render services sleep when idle; recovery is required after waking.
+
 On startup, migrations run automatically and create the database at
 `backend/data/factory-traffic.sqlite3` when launched from `backend/`. Set the
 `FACTORY_TRAFFIC_DB` environment variable to use another database path. Relative
 paths are resolved from the process working directory. The database and its WAL
 files are local runtime data and are excluded from Git. Use one Uvicorn worker.
+
+Set `DATABASE_URL` to a PostgreSQL connection string to select the hosted adapter.
+Keep credentials outside the repository. Both adapters use the same application
+and domain logic; see the deployment guide for configuration and parity tests.
 
 To enable the REST controller simulation, run in PowerShell:
 
@@ -172,12 +181,13 @@ backend/
     application/     Junction/event use cases and repository interfaces
     controllers/     REST simulator implementing the controller port
     domain/          Configuration, scheduling, and the traffic state machine
-    persistence/     SQLite adapter and versioned SQL migrations
+    persistence/     SQLite/PostgreSQL adapters, shared SQL, and migrations
     main.py          ASGI entry point
     simulation.py    Deterministic domain walkthrough
   tests/
     api/             Request, concurrency, and persistence scenarios
     domain/          Signal, scheduling, and engine tests independent of HTTP
+    hosted/          Optional PostgreSQL parity and deployment configuration checks
   scripts/
     verify_scenarios.py  Nine live HTTP scenarios using a disposable backend
 frontend/
@@ -194,10 +204,12 @@ docs/
   assessment-demo.md All nine required scenarios and expected outcomes
   submission.md      Deliverable checklist, verification, limits, and review tour
   architecture.md    Boundaries, safety decisions, and persistence design
+  deployment.md      Free hosting, environment variables, and public verification
 ```
 
 The domain package imports only the Python standard library. Schema definitions
-are in `backend/src/factory_traffic/persistence/migrations/`.
+are in `backend/src/factory_traffic/persistence/migrations/` and
+`backend/src/factory_traffic/persistence/postgresql_migrations/`.
 
 ## Major architectural decisions
 
@@ -209,6 +221,8 @@ are in `backend/src/factory_traffic/persistence/migrations/`.
   event commits its queue mutation, receipt, sequence cursor, and audit together.
   `BEGIN IMMEDIATE` and unique keys protect concurrent writes, including global
   event IDs. Per-junction locks provide the application serialization boundary.
+  The PostgreSQL adapter uses a transaction-scoped advisory write lock and
+  repeatable-read snapshots, preserving the same transaction boundaries.
   The control runtime uses one process; database write serialization alone
   does not coordinate timer ownership or controller delivery across workers.
 - **REST controller adapter:** unique command and batch IDs, connection epochs,
@@ -302,8 +316,10 @@ the REST simulator or explicit controller reports; no hardware is connected.
   best-effort fallback. This is a failure action; manual and emergency requests
   cannot invoke it to skip normal YELLOW/clearance. Recovery on a healthy junction
   is rejected. Report all unavailable devices ONLINE before requesting recovery.
-- **Scope:** REST simulation and polling satisfy the assessment. MQTT, production
-  authentication, and deployment infrastructure are deferred until the core works.
+- **Scope:** REST simulation and polling satisfy the assessment. MQTT and
+  production authentication remain outside scope. The hosted demo uses free
+  services with idle sleep and usage limits; it is not continuously available
+  factory control.
 
 ## AI / Tool Usage
 

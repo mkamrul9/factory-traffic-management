@@ -19,6 +19,7 @@ migrations and seeds Junction A.
 - Browser controls and error behavior: `docs/dashboard.md`.
 - Tests: `backend/tests/` and the `*.spec.ts` files under `frontend/src/app/`.
 - Architectural decisions: the README and `docs/architecture.md`.
+- Hosted demo configuration and free-service limits: `docs/deployment.md`.
 - Required **Assumptions / Questions / Requirement Issues** and **AI / Tool Usage**
   sections: root README, using the exact requested headings.
 
@@ -40,6 +41,9 @@ environment and build outputs were newly created.
 Verification results:
 
 - Backend: 292 tests passed; Ruff lint and format checks passed; mypy passed.
+- PostgreSQL deployment work: 19 additional tests passed against a disposable
+  PostgreSQL 18 database, including restart, parallel retries, atomic rollback,
+  coherent snapshots, and controller scenario parity.
 - Frontend: the clean copy passed its original 26 tests and optimized build. The
   subsequent confirmation-label and readability update passed all 28 frontend
   tests, formatting, and an optimized build without budget warnings.
@@ -48,7 +52,8 @@ Verification results:
 The live nine-scenario driver also passed all nine cases against its own temporary
 database and Uvicorn process using default signal timings. That run used the
 working checkout's installed backend; the clean copy independently ran the full
-backend/API suite. The subsequent dashboard update did not change backend logic.
+backend/API suite. The same live walkthrough also passed inside the Linux Docker
+image with Python 3.14.10 and SQLite. PostgreSQL has separate adapter parity checks.
 
 Earlier browser verification covered vehicle arrival/clearance, duplicate retries,
 manual and emergency control, device failure and recovery, partial and batch ACKs,
@@ -58,16 +63,16 @@ browser end-to-end suite.
 
 ## Current limits and next work
 
-- The supported demo is a single backend process with SQLite and localhost
-  development servers. Multiple workers need timer ownership and coordination;
-  SQLite write locking alone does not provide them.
+- Run one backend process: SQLite locally or PostgreSQL for the hosted demo.
+  Multiple workers need timer ownership and coordination; database write locking
+  alone does not provide them. Free hosting can sleep and has usage limits.
 - REST simulates physical controllers. MQTT, real hardware, heartbeat expiry,
   hardware conflict interlocks, and a watchdog remain future integration work.
   ACK handling cannot guarantee a physical safe state when a controller is
   unreachable. UNKNOWN remains visible until fresh evidence arrives.
-- There is no production authentication/authorization, deployment configuration,
-  automatic command retry, or history/receipt retention policy. Do not expose the
-  demo directly to an untrusted network.
+- There is no production authentication/authorization, automatic command retry,
+  or history/receipt retention policy. The public assessment demo exposes
+  simulated operator controls and must contain only demonstration data.
 - The frontend shows the most recent 30 events; older events are available through
   the paginated history API. It uses one-second polling rather than SSE/WebSocket.
 - Additional junction instances are supported, but the creation API currently
@@ -78,12 +83,12 @@ browser end-to-end suite.
 - Normal fairness uses a 120-second scheduling threshold, not a guaranteed physical
   departure deadline. Manual control, emergencies, clearance, and ACK delays can
   extend waiting time.
-- Verification was performed on Windows with Python 3.14 and Node.js 24. Other
-  supported runtime versions and operating systems have not been exercised here.
+- Verification used Windows with Python 3.14 and Node.js 24, plus a Linux Docker
+  backend image. Other supported runtime versions have not been exercised here.
 
 With more time, prioritize authenticated operator actions, controller/device
-protocols with fencing and heartbeat expiry, ownership coordination, and deployment
-checks before adding analytics or more frontend polish.
+protocols with fencing and heartbeat expiry, ownership coordination, and continuous
+hosting before adding analytics or more frontend polish.
 
 ## Technical review tour
 
@@ -91,7 +96,8 @@ Trace an arrival from `api/traffic.py` through `application/traffic.py` to the
 receipt, queue, and transaction interfaces. Then read `domain/scheduling.py` and
 `domain/engine.py` for selection, manual/emergency precedence, and transitions.
 `application/control.py` maps signal requests to durable commands, ACK correlation,
-timeouts, and recovery. `persistence/sqlite.py` owns transactional storage.
+timeouts, and recovery. `persistence/sql_transaction.py` implements shared storage
+operations; `sqlite.py` and `postgresql.py` own connections and transactions.
 
 Explain why accepted intent differs from physical execution, why all four matching
 ACKs are needed, why stage timers start after confirmation, and why restart cannot

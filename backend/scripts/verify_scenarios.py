@@ -42,7 +42,10 @@ class DemoServer:
         self.process: subprocess.Popen[bytes] | None = None
 
     def start(self) -> None:
-        environment = {**os.environ, "FACTORY_TRAFFIC_DB": str(self.database)}
+        environment = {
+            **{key: value for key, value in os.environ.items() if key != "DATABASE_URL"},
+            "FACTORY_TRAFFIC_DB": str(self.database),
+        }
         with self.log.open("ab") as output:
             self.process = subprocess.Popen(
                 [

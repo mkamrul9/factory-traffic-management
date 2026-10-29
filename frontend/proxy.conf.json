@@ -3,5 +3,8 @@
     "target": "http://127.0.0.1:8000",
     "secure": false,
     "changeOrigin": true
-  }
+  },
+  "/docs": { "target": "http://127.0.0.1:8000", "secure": false },
+  "/docs/**": { "target": "http://127.0.0.1:8000", "secure": false },
+  "/openapi.json": { "target": "http://127.0.0.1:8000", "secure": false }
 }

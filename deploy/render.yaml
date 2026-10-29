@@ -1,0 +1,19 @@
+# Free web service; DATABASE_URL points to a separately provisioned free PostgreSQL database.
+services:
+  - type: web
+    name: factory-traffic-api
+    runtime: docker
+    repo: https://github.com/mkamrul9/factory-traffic-management
+    branch: main
+    plan: free
+    region: singapore
+    numInstances: 1
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    autoDeployTrigger: "off"
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: FACTORY_TRAFFIC_REQUIRE_POSTGRES
+        value: "1"

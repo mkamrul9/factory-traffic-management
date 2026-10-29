@@ -22,6 +22,7 @@ data/
 *.log
 .uv-cache/
 .verification/
+.vercel/
 
 # Angular and build output
 node_modules/

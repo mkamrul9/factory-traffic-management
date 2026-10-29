@@ -7,7 +7,8 @@ transactions and per-junction locks. `application/control.py` coordinates the
 domain engine, device observations, recovery, and the durable command outbox.
 `domain/` contains configuration, event rules, scheduling, and the state machine;
 it imports only the Python standard library. `persistence/` implements repository
-interfaces using SQLite. `controllers/` contains the explicit REST simulator.
+interfaces using SQLite locally or PostgreSQL when `DATABASE_URL` is configured.
+`controllers/` contains the explicit REST simulator.
 
 ```text
 Angular dashboard / REST sensor and controller simulator
@@ -18,7 +19,7 @@ Angular dashboard / REST sensor and controller simulator
                             |
                  Domain rules and traffic engine
                             |
-         SQLite: queues, runtime, commands, receipts, history
+       SQL storage: queues, runtime, commands, receipts, history
                             |
                  committed command outbox
                             |
@@ -49,6 +50,13 @@ and audit entries commit atomically. Each transaction owns its SQLite connection
 Read operations use snapshot transactions. Writes use `BEGIN IMMEDIATE`, a
 10-second lock timeout, database uniqueness constraints, and a junction lock.
 WAL mode allows readers while another connection writes.
+
+The hosted PostgreSQL adapter shares the SQL transaction operations and domain
+conversions. Writers acquire a database-wide transaction-scoped advisory lock,
+preserving serialization of global event IDs across junctions. Read-only
+transactions use repeatable-read isolation. A bounded connection pool closes at
+application shutdown. PostgreSQL has its own versioned schema migrations; local
+SQLite files are not uploaded or migrated into the hosted demonstration database.
 
 The same mutation path handles sensor events, operator intents, device reports,
 acknowledgements, and timer ticks. IDs are unique across sensor/device events.
@@ -102,7 +110,7 @@ integration test verifies actual background ticking. The periodic task logs erro
 and retries after a short backoff; failed transactions leave no partial commands.
 
 Run one Uvicorn worker. In-process locks do not coordinate multiple control owners
-or timer tasks. SQLite serializes writes but does not implement leader election.
+or timer tasks. Database write serialization does not implement leader election.
 Scaling requires a single owner per junction, durable message processing, or
 additional distributed coordination.
 
@@ -112,6 +120,9 @@ Versioned migrations store configuration, waiting vehicles, global event receipt
 sequence cursors, runtime state, controller commands, and audit history. Each
 migration and version record is atomic. The second migration renames the earlier
 sensor receipt table to `event_receipts`, retaining all existing data.
+The PostgreSQL adapter starts with the current complete schema in its own initial
+migration. Both adapters record migration versions within the same transaction
+as the schema change.
 
 Restart retains queues, receipts, cursors, device observations, and history. It
 marks pending commands INTERRUPTED, discards prior physical confirmations, cancels
