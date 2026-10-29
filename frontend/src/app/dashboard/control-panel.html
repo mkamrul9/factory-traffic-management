@@ -4,7 +4,6 @@
       <div class="card-heading">
         <div>
           <h2 id="manual-title">Manual control</h2>
-          <p>Request a safe traffic movement</p>
         </div>
         <app-icon name="settings" />
       </div>
@@ -14,20 +13,23 @@
           <option [value]="direction">{{ titleCase(direction) }} approach</option>
         }
       </select>
-      <p class="form-hint">The backend serves its compatible road group.</p>
+      <p class="form-hint">Compatible approaches move together.</p>
       <button
         class="button button-primary button-full"
         [disabled]="!store.canManual()"
         (click)="store.command('MANUAL_GREEN_REQUEST', manualDirection)"
       >
-        <app-icon name="play" />Request green</button
-      ><button
-        class="button button-outline button-full"
-        [disabled]="!store.canWrite() || s.mode !== 'MANUAL'"
-        (click)="store.command('RETURN_TO_AUTOMATIC')"
-      >
-        <app-icon name="refresh" />Return to automatic
+        <app-icon name="play" />Request green
       </button>
+      @if (s.mode === 'MANUAL') {
+        <button
+          class="button button-outline button-full"
+          [disabled]="!store.canWrite() || s.mode !== 'MANUAL'"
+          (click)="store.command('RETURN_TO_AUTOMATIC')"
+        >
+          <app-icon name="refresh" />Return to automatic
+        </button>
+      }
       @if (s.manual_expires_at) {
         <div class="control-note">
           <app-icon name="clock" /><span
@@ -38,10 +40,10 @@
         <div class="control-note">
           <app-icon name="shield" /><span>{{
             s.mode === 'EMERGENCY'
-              ? 'Emergency priority pauses manual requests.'
+              ? 'Unavailable during an emergency.'
               : !s.control_active
                 ? 'Restore controller confirmation to enable manual control.'
-                : 'Overrides expire after 120 seconds. Safety transitions always apply.'
+                : 'Manual requests expire after 120 seconds.'
           }}</span>
         </div>
       }
@@ -50,16 +52,12 @@
       <div class="card-heading">
         <div>
           <h2 id="controller-title">Controller simulator</h2>
-          <p>Confirm what the controller executes</p>
         </div>
         <app-icon name="chip" />
       </div>
       <div class="simulator-switch">
         <div>
-          <strong>Automatic acknowledgements</strong
-          ><span>{{
-            s.simulator_auto_ack ? 'Continuous REST simulation' : 'Explicit confirmation required'
-          }}</span>
+          <strong>Automatic acknowledgements</strong>
         </div>
         <button
           type="button"
@@ -81,7 +79,7 @@
         <div>
           <dt>Current group</dt>
           <dd>
-            {{ s.phase === 'ALL_RED' ? 'All directions red' : s.phase.replaceAll('_', ' / ') }}
+            {{ s.phase === 'ALL_RED' ? 'None' : s.phase.replaceAll('_', ' / ') }}
           </dd>
         </div>
         <div>
@@ -107,13 +105,15 @@
           </dd>
         </div>
       </dl>
-      <button
-        class="button button-outline button-full"
-        [disabled]="!store.canAcknowledge()"
-        (click)="store.acknowledgeBatch()"
-      >
-        <app-icon name="check" />Acknowledge pending batch
-      </button>
+      @if (s.pending_commands.length) {
+        <button
+          class="button button-outline button-full"
+          [disabled]="!store.canAcknowledge()"
+          (click)="store.acknowledgeBatch()"
+        >
+          <app-icon name="check" />Acknowledge pending batch
+        </button>
+      }
       @if (s.mode === 'DEGRADED') {
         <button
           class="button button-recovery button-full"
@@ -130,20 +130,6 @@
           }}
         </p>
       }
-      <div class="controller-footnote">
-        <span class="status-dot" [attr.data-status]="s.controller_status"></span>ACK deadline:
-        per-junction configuration
-      </div>
-    </section>
-    <section class="safety-note">
-      <span class="safety-note-icon"><app-icon name="shield" /></span>
-      <div>
-        <h3>Safety is always in control</h3>
-        <p>
-          Manual and emergency requests follow the same yellow and all-red sequence. Unknown signals
-          are never shown as confirmed red.
-        </p>
-      </div>
     </section>
   </aside>
 }

@@ -55,20 +55,20 @@
 .center-label {
   fill: #73817b;
   font:
-    600 9px 'Segoe UI',
+    600 10px 'Segoe UI',
     sans-serif;
   letter-spacing: 1px;
 }
 .center-phase {
   fill: #294c3d;
   font:
-    700 15px 'Segoe UI',
+    700 16px 'Segoe UI',
     sans-serif;
 }
 .center-caption {
-  fill: #7a8a82;
+  fill: #425b4f;
   font:
-    500 7px 'Segoe UI',
+    600 10px 'Segoe UI',
     sans-serif;
   letter-spacing: 0.6px;
 }
@@ -89,7 +89,7 @@
   border: 1px solid #e8d2a7;
   border-radius: 6px;
   padding: 7px 10px;
-  font-size: 11px;
+  font-size: 0.875rem;
 }
 .stale-overlay app-icon {
   width: 14px;
@@ -110,7 +110,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 12px;
+  font-size: 0.875rem;
 }
 .direction-icon {
   display: flex;
@@ -131,7 +131,7 @@
 }
 .signal-label {
   margin-left: auto;
-  font-size: 10px;
+  font-size: 0.8125rem;
   font-weight: 650;
   display: flex;
   align-items: center;
@@ -150,17 +150,18 @@
   color: #bf514f;
 }
 [data-signal='YELLOW'] {
-  color: #a87a1a;
+  color: #87600c;
 }
 [data-signal='UNKNOWN'] {
-  color: #87928c;
+  color: #5e6d64;
 }
 .approach-meta {
   display: flex;
   justify-content: space-between;
   gap: 8px;
+  flex-wrap: wrap;
   margin-top: 9px;
-  font-size: 10px;
+  font-size: 0.8125rem;
   color: var(--muted);
 }
 .approach-meta b {
@@ -175,10 +176,22 @@
     padding: 10px;
   }
   .approach-meta {
-    font-size: 9px;
+    font-size: 0.75rem;
     gap: 3px;
   }
   .stale-overlay {
-    font-size: 9px;
+    font-size: 0.75rem;
+    max-width: calc(100% - 20px);
+    white-space: normal;
+    width: max-content;
+  }
+}
+@media (max-width: 360px) {
+  .approach-title {
+    flex-wrap: wrap;
+  }
+  .signal-label {
+    flex-basis: 100%;
+    margin-left: 0;
   }
 }

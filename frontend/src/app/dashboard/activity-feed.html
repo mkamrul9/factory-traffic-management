@@ -4,7 +4,6 @@
       <h2 id="activity-title">
         Recent activity <span class="count-label">{{ store.history().length }}</span>
       </h2>
-      <p>Traffic decisions, device reports, and operator actions</p>
     </div>
     <div class="activity-actions">
       <label class="sr-only" for="activity-filter">Activity filter</label
@@ -39,10 +38,12 @@
     }
   </div>
   <div class="activity-footer">
-    <span>Latest 30 backend events · newest first</span
-    ><button class="text-button" (click)="showAllHistory.set(!showAllHistory())">
-      {{ showAllHistory() ? 'Show fewer events' : 'Show all recent events'
-      }}<app-icon name="down" />
-    </button>
+    <span>Latest 30 events · newest first</span>
+    @if (filteredHistory().length > 7) {
+      <button class="text-button" (click)="showAllHistory.set(!showAllHistory())">
+        {{ showAllHistory() ? 'Show fewer events' : 'Show all recent events'
+        }}<app-icon name="down" />
+      </button>
+    }
   </div>
 </section>

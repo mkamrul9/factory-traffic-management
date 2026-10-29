@@ -24,7 +24,7 @@ and requested signals, queues, alerts, manual controls, simulator inputs, and
 recent history. It supports creating and switching between junctions.
 
 All nine assessment scenarios have passed a live HTTP walkthrough. Clean-source
-installation, 292 backend tests, 26 frontend tests, and the optimized Angular
+installation, 292 backend tests, 28 frontend tests, and the optimized Angular
 build have been verified. See [submission notes](docs/submission.md) for the
 deliverable checklist, verification scope, limitations, and technical review tour.
 
@@ -194,7 +194,6 @@ docs/
   assessment-demo.md All nine required scenarios and expected outcomes
   submission.md      Deliverable checklist, verification, limits, and review tour
   architecture.md    Boundaries, safety decisions, and persistence design
-  implementation-plan.md
 ```
 
 The domain package imports only the Python standard library. Schema definitions
@@ -225,8 +224,8 @@ are in `backend/src/factory_traffic/persistence/migrations/`.
   the retained snapshot. The browser does not schedule traffic or confirm lights
   optimistically.
 
-See [architecture notes](docs/architecture.md) for the intended control flow and
-[implementation plan](docs/implementation-plan.md) for review checkpoints.
+See [architecture notes](docs/architecture.md) for the control flow and
+[submission notes](docs/submission.md) for verification and review guidance.
 
 ## Assumptions / Questions / Requirement Issues
 
@@ -308,7 +307,7 @@ the REST simulator or explicit controller reports; no hardware is connected.
 
 ## AI / Tool Usage
 
-OpenAI Codex assisted with assessment review, project structure, backend and
-frontend code, documentation, test execution, and browser checks. The candidate is
-responsible for reviewing the implementation and being able to explain, debug,
-and modify the submitted work.
+This project was developed with assistance from OpenAI Codex for planning,
+implementation, tests, documentation, debugging, and verification. The submitter
+is responsible for reviewing and understanding the code and being able to explain,
+debug, and modify the implementation.

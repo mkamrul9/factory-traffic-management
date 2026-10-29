@@ -16,7 +16,7 @@ export class ActivityFeed {
   readonly store = inject(DashboardStore);
   readonly showAllHistory = signal(false);
   readonly activityFilter = signal('ALL');
-  readonly visibleHistory = computed(() => {
+  readonly filteredHistory = computed(() => {
     const filter = this.activityFilter();
     const entries = this.store
       .history()
@@ -29,8 +29,11 @@ export class ActivityFeed {
               ? /FAILURE|TIMEOUT|REJECTED|RECOVER/.test(entry.event_type)
               : /MANUAL|MODE|AUTOMATIC|ACKNOWLEDGEMENT/.test(entry.event_type)),
       );
-    return this.showAllHistory() ? entries : entries.slice(0, 7);
+    return entries;
   });
+  readonly visibleHistory = computed(() =>
+    this.showAllHistory() ? this.filteredHistory() : this.filteredHistory().slice(0, 7),
+  );
   activityTitle(entry: AuditEntry): string {
     return titleCase(entry.event_type);
   }

@@ -10,15 +10,11 @@
   margin-bottom: 25px;
 }
 .page-heading h1 {
-  font-size: 29px;
+  font-size: 1.8125rem;
   letter-spacing: -1px;
   line-height: 1.4;
   margin: 5px 0 6px;
   font-weight: 650;
-}
-.page-heading p {
-  font-size: 11px;
-  color: #84907e;
 }
 .refresh-button {
   align-self: center;
@@ -38,7 +34,7 @@
   padding: 20px;
 }
 .junction-label {
-  font: 9px var(--mono);
+  font: 0.75rem var(--mono);
   margin-left: 7px;
   background: #f2f5ed;
   color: #7b8c6b;
@@ -54,8 +50,8 @@
   margin-top: 16px;
   padding-top: 13px;
   border-top: 1px solid #f0f2ed;
-  color: #98a08f;
-  font-size: 8px;
+  color: var(--muted);
+  font-size: 0.75rem;
 }
 .intersection-legend > span {
   display: flex;
@@ -93,13 +89,13 @@
 .data-warning strong,
 .emergency-banner strong {
   display: block;
-  font-size: 11px;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 .data-warning div > span,
 .emergency-banner div > span {
   display: block;
-  font-size: 9px;
+  font-size: 0.75rem;
   margin-top: 3px;
   line-height: 1.7;
 }
@@ -138,11 +134,11 @@
   height: 14px;
 }
 .alerts-title strong {
-  font-size: 10px;
+  font-size: 0.8125rem;
   font-weight: 550;
 }
 .alerts-title > span {
-  font: 8px var(--mono);
+  font: 0.75rem var(--mono);
   padding: 1px 4px;
   border: 1px solid #e8dfc3;
   border-radius: 3px;
@@ -153,7 +149,7 @@
   align-self: center;
 }
 .alerts-list p {
-  font-size: 9px;
+  font-size: 0.75rem;
   line-height: 1.7;
   color: #aa9a73;
 }
@@ -168,12 +164,12 @@
   gap: 15px;
 }
 .empty-state h2 {
-  font-size: 19px;
+  font-size: 1.1875rem;
   font-weight: 550;
   letter-spacing: -0.5px;
 }
 .empty-state p {
-  font-size: 11px;
+  font-size: 0.875rem;
   max-width: 400px;
   color: #8a997e;
   line-height: 1.9;
@@ -210,15 +206,15 @@
     margin-bottom: 20px;
   }
   .page-heading h1 {
-    font-size: 26px;
+    font-size: 1.625rem;
   }
   .page-heading p {
-    font-size: 10px;
+    font-size: 0.8125rem;
     max-width: 235px;
     line-height: 1.7;
   }
   .refresh-button {
-    font-size: 9px;
+    font-size: 0.75rem;
     padding: 8px 10px;
   }
   .main-column {
@@ -228,16 +224,16 @@
     padding: 16px;
   }
   .card-heading h2 {
-    font-size: 12px;
+    font-size: 0.875rem;
   }
   .card-heading p {
-    font-size: 9px;
+    font-size: 0.75rem;
   }
   .badge {
-    font-size: 8px;
+    font-size: 0.75rem;
   }
   .intersection-legend {
-    font-size: 7px;
+    font-size: 0.75rem;
     gap: 10px;
   }
   .alerts-panel {
@@ -251,7 +247,7 @@
   }
   .data-warning div > span,
   .emergency-banner div > span {
-    font-size: 9px;
+    font-size: 0.75rem;
   }
   .emergency-banner .badge {
     display: none;

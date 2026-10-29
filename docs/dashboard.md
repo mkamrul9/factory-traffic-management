@@ -59,7 +59,7 @@ deadline deliberately enters DEGRADED mode; use recovery to start a fresh batch.
    request a movement; if it is degraded, click **Recover controller**.
 2. **Acknowledge pending batch** confirms every remaining command in the current
    batch. The backend still waits for clearance before a conflicting GREEN.
-3. To inspect partial confirmation, open **Acknowledgements**, select a pending
+3. To inspect partial confirmation, open the **Controller** tab, select a pending
    controller command, and submit an **ACK** with its requested state. Only that
    direction becomes confirmed. Submit the rest before the deadline, or observe
    the safe timeout and recover again.
@@ -92,6 +92,13 @@ Angular build and formatting checks pass. Live browser checks exercised arrivals
 duplicate retries, clearances, manual and emergency control, sensor failure and
 recovery, duplicate/new junction creation, partial and batch ACKs, unknown routes,
 backend disconnection/reconnection, and narrow-screen navigation.
+
+The intersection confirmation caption also checks the current physical evidence.
+If another fault invalidates previously confirmed signals, it shows UNKNOWN even
+when the engine is no longer waiting for that batch's ACKs. Known signals that do
+not match the requested state show MISMATCH. Regression tests cover both cases.
+Controls for returning to automatic, clearing vehicles, resending events, and
+batch acknowledgements appear when their corresponding action is available.
 
 The [assessment walkthrough](assessment-demo.md) covers all nine required scenarios,
 including a runnable live HTTP driver. [Submission notes](submission.md) record

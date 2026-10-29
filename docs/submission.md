@@ -37,17 +37,18 @@ dependencies were installed with the committed uv lockfile and frontend
 dependencies with `npm ci`. Existing package download caches were reused; the
 environment and build outputs were newly created.
 
-Results from the clean copy:
+Verification results:
 
 - Backend: 292 tests passed; Ruff lint and format checks passed; mypy passed.
-- Frontend: 26 tests passed; Prettier passed; optimized build passed without budget
-  warnings. Initial assets were 397.42 kB raw, with an estimated transfer of 100.85 kB.
+- Frontend: the clean copy passed its original 26 tests and optimized build. The
+  subsequent confirmation-label and readability update passed all 28 frontend
+  tests, formatting, and an optimized build without budget warnings.
 - Both lockfiles installed successfully into newly created dependency directories.
 
 The live nine-scenario driver also passed all nine cases against its own temporary
 database and Uvicorn process using default signal timings. That run used the
 working checkout's installed backend; the clean copy independently ran the full
-backend/API suite. No application source changes were needed to pass verification.
+backend/API suite. The subsequent dashboard update did not change backend logic.
 
 Earlier browser verification covered vehicle arrival/clearance, duplicate retries,
 manual and emergency control, device failure and recovery, partial and batch ACKs,
@@ -103,6 +104,6 @@ write disabling when observations age or fail, and why the browser never makes
 traffic decisions. Use the existing domain/API tests when changing a policy or
 failure rule.
 
-The source archive or repository still needs to be submitted by the candidate
-through the assessment form. This project does not submit the form or publish a
-repository automatically.
+Submit the [repository URL](https://github.com/mkamrul9/factory-traffic-management)
+or the source archive through the assessment form. Publishing to GitHub does not
+submit the assessment form.

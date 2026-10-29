@@ -3,9 +3,7 @@
     <div class="card-heading">
       <div>
         <h2 id="simulation-title">Simulation workbench</h2>
-        <p>Send events through the same backend APIs as devices</p>
       </div>
-      <span class="subtle-label">REST</span>
     </div>
     <div class="tabs" role="tablist" aria-label="Simulation type">
       <button
@@ -34,7 +32,7 @@
         [class.active]="simulationTab() === 'controller'"
         (click)="simulationTab.set('controller')"
       >
-        <app-icon name="signal" />Acknowledgements
+        <app-icon name="signal" />Controller
       </button>
     </div>
     @switch (simulationTab()) {
@@ -75,7 +73,7 @@
                 name="vehicleId"
                 [(ngModel)]="vehicleId"
                 maxlength="128"
-                placeholder="A unique ID is generated if left blank"
+                placeholder="Auto-generated if blank"
               /><button
                 type="submit"
                 class="button button-primary"
@@ -89,50 +87,58 @@
                 Use letters, numbers, dots, colons, hyphens, or underscores.
               </p>
             }
-            <div class="form-footnote">
-              <span>Emergency vehicles start safe preemption automatically.</span
-              ><button
-                class="text-button"
-                type="button"
-                [disabled]="!store.canWrite() || !store.lastSensorEvent()"
-                (click)="store.resend()"
-              >
-                Resend last event<app-icon name="refresh" />
-              </button>
-            </div>
-          </form>
-          <div class="clearance-form">
-            <div class="section-label">
-              <span>VEHICLE CLEARANCE</span><span>{{ s.queued_vehicles.length }} waiting</span>
-            </div>
-            <div class="input-action">
-              <div class="grow">
-                <label class="sr-only" for="clear-vehicle">Waiting vehicle to clear</label
-                ><select id="clear-vehicle" name="clearVehicle" [(ngModel)]="clearVehicleId">
-                  <option value="">
-                    {{
-                      s.queued_vehicles.length
-                        ? 'Select a waiting vehicle'
-                        : 'No vehicles are waiting'
-                    }}
-                  </option>
-                  @for (vehicle of s.queued_vehicles; track vehicle.vehicle_id) {
-                    <option [value]="vehicle.vehicle_id">
-                      {{ titleCase(vehicle.direction) }} · {{ vehicle.vehicle_id }} ·
-                      {{ vehicleLabel(vehicle.vehicle_type) }}
-                    </option>
-                  }
-                </select>
+            @if (store.lastSensorEvent() || vehicleType === 'EMERGENCY') {
+              <div class="form-footnote">
+                @if (vehicleType === 'EMERGENCY') {
+                  <span>Emergency vehicles request priority.</span>
+                }
+                @if (store.lastSensorEvent()) {
+                  <button
+                    class="text-button"
+                    type="button"
+                    [disabled]="!store.canWrite() || !store.lastSensorEvent()"
+                    (click)="store.resend()"
+                  >
+                    Resend last event<app-icon name="refresh" />
+                  </button>
+                }
               </div>
-              <button
-                class="button button-outline"
-                [disabled]="!store.canWrite() || !clearanceAvailable"
-                (click)="clearVehicle()"
-              >
-                <app-icon name="check" />Clear vehicle
-              </button>
+            }
+          </form>
+          @if (s.queued_vehicles.length) {
+            <div class="clearance-form">
+              <div class="section-label">
+                <span>VEHICLE CLEARANCE</span><span>{{ s.queued_vehicles.length }} waiting</span>
+              </div>
+              <div class="input-action">
+                <div class="grow">
+                  <label class="sr-only" for="clear-vehicle">Waiting vehicle to clear</label
+                  ><select id="clear-vehicle" name="clearVehicle" [(ngModel)]="clearVehicleId">
+                    <option value="">
+                      {{
+                        s.queued_vehicles.length
+                          ? 'Select a waiting vehicle'
+                          : 'No vehicles are waiting'
+                      }}
+                    </option>
+                    @for (vehicle of s.queued_vehicles; track vehicle.vehicle_id) {
+                      <option [value]="vehicle.vehicle_id">
+                        {{ titleCase(vehicle.direction) }} · {{ vehicle.vehicle_id }} ·
+                        {{ vehicleLabel(vehicle.vehicle_type) }}
+                      </option>
+                    }
+                  </select>
+                </div>
+                <button
+                  class="button button-outline"
+                  [disabled]="!store.canWrite() || !clearanceAvailable"
+                  (click)="clearVehicle()"
+                >
+                  <app-icon name="check" />Clear vehicle
+                </button>
+              </div>
             </div>
-          </div>
+          }
         </div>
       }
       @case ('devices') {
@@ -182,8 +188,7 @@
             </div>
           </div>
           <p class="form-hint">
-            An unavailable controller, signal, or sensor pauses traffic control. Bringing a device
-            online starts fresh recovery when all devices are available.
+            Unavailable devices pause traffic. Restore them online before recovery.
           </p>
           <div class="device-grid">
             @for (direction of directions; track direction) {
@@ -272,10 +277,6 @@
               <app-icon name="check" />Submit response
             </button>
           </div>
-          <p class="form-hint">
-            Report a different state or a failure to demonstrate safe fault handling.
-            Acknowledgement never bypasses yellow or clearance.
-          </p>
         </form>
       }
     }

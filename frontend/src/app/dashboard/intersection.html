@@ -68,7 +68,7 @@
       {{ status().stage === 'ALL_RED' ? 'ALL RED' : status().stage }}
     </text>
     <text x="300" y="214" text-anchor="middle" class="center-caption">
-      {{ status().awaiting_confirmation ? 'AWAITING ACK' : 'CONFIRMED' }}
+      {{ confirmationCaption() }}
     </text>
     <g transform="translate(197,56)">
       <rect width="28" height="74" rx="7" class="signal-housing" />

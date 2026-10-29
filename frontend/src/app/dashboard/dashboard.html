@@ -1,8 +1,6 @@
 <section class="page-heading">
   <div>
-    <div class="eyebrow">FACTORY ROAD NETWORK</div>
     <h1>Traffic operations</h1>
-    <p>Monitor flow. Manage priorities. Keep every crossing safe.</p>
   </div>
   <button
     class="button button-outline refresh-button"
@@ -62,7 +60,6 @@
             <h2 id="intersection-title">
               {{ store.selectedName() }} <span class="junction-label">{{ s.junction_id }}</span>
             </h2>
-            <p>Confirmed signals and waiting traffic</p>
           </div>
           <span
             class="badge"
@@ -75,9 +72,7 @@
         <app-intersection [status]="s" [stale]="!store.fresh()" />
         <div class="intersection-legend">
           <span><i class="legend-dot confirmed"></i>Confirmed state</span
-          ><span
-            ><i class="legend-dot requested"></i>Requested state shown below each approach</span
-          >
+          ><span><i class="legend-dot requested"></i>Requested state below each approach</span>
         </div>
       </section>
       <app-simulation-workbench />

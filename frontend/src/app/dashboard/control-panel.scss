@@ -14,7 +14,7 @@
 .manual-card .form-hint {
   margin-top: 7px;
   margin-bottom: 17px;
-  font-size: 9px;
+  font-size: 0.75rem;
 }
 .manual-card .button-full + .button-full {
   margin-top: 9px;
@@ -23,9 +23,9 @@
   display: flex;
   align-items: start;
   gap: 7px;
-  font-size: 9px;
+  font-size: 0.75rem;
   line-height: 1.7;
-  color: #93a087;
+  color: var(--muted);
   padding-top: 15px;
   margin-top: 17px;
   border-top: 1px solid #edf0e8;
@@ -51,19 +51,13 @@
 }
 .simulator-switch strong {
   display: block;
-  font-size: 10px;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #63745a;
 }
-.simulator-switch > div > span {
-  display: block;
-  font-size: 9px;
-  color: #99a38e;
-  margin-top: 3px;
-}
 .simulator-switch > button {
-  width: 31px;
-  height: 18px;
+  width: 42px;
+  height: 25px;
   border: 1px solid #d4ddd0;
   background: #e5eae0;
   border-radius: 20px;
@@ -73,8 +67,8 @@
   flex: none;
 }
 .simulator-switch > button > span {
-  width: 12px;
-  height: 12px;
+  width: 19px;
+  height: 19px;
   border-radius: 50%;
   background: #fff;
   box-shadow: 0 1px 2px #33492722;
@@ -85,13 +79,13 @@
   border-color: #78956a;
 }
 .simulator-switch > button.enabled > span {
-  transform: translateX(12px);
+  transform: translateX(15px);
 }
 .controller-facts {
   margin: 16px 0 19px;
   display: grid;
   gap: 13px;
-  font-size: 10px;
+  font-size: 0.8125rem;
 }
 .controller-facts > div {
   display: flex;
@@ -100,10 +94,10 @@
   gap: 10px;
 }
 .controller-facts dt {
-  color: #98a18d;
+  color: var(--muted);
 }
 .controller-facts dd {
-  font-size: 10px;
+  font-size: 0.8125rem;
   margin: 0;
   color: #66795a;
   font-weight: 550;
@@ -119,53 +113,7 @@
   margin-top: 9px;
 }
 .controller-card .form-hint {
-  font-size: 9px;
-}
-.controller-footnote {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-top: 15px;
-  margin-top: 17px;
-  border-top: 1px solid #edf0e8;
-  font-size: 8px;
-  color: #a0a88f;
-}
-.controller-footnote .status-dot {
-  width: 5px;
-  height: 5px;
-}
-.safety-note {
-  display: flex;
-  gap: 11px;
-  padding: 3px 7px 0;
-}
-.safety-note-icon {
-  height: 29px;
-  width: 29px;
-  flex: none;
-  border: 1px solid #dce5d3;
-  border-radius: 7px;
-  display: grid;
-  place-items: center;
-  color: #8ea17e;
-  background: #f0f5e9;
-}
-.safety-note-icon app-icon {
-  height: 16px;
-  width: 16px;
-}
-.safety-note h3 {
-  font-size: 10px;
-  font-weight: 600;
-  color: #7c8f6c;
-  margin-top: 1px;
-}
-.safety-note p {
-  font-size: 9px;
-  line-height: 1.9;
-  color: #a2ab93;
-  margin-top: 4px;
+  font-size: 0.75rem;
 }
 @media (min-width: 1600px) {
   .manual-card,
@@ -177,10 +125,6 @@
   .control-column {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
-  }
-  .safety-note {
-    grid-column: 1/-1;
-    padding: 0 5px;
   }
 }
 @media (max-width: 760px) {

@@ -6,13 +6,14 @@
       (click)="toggleMenu.emit()"
     >
       <app-icon name="menu" /></button
-    ><span>Control center</span><app-icon name="chevron" /><strong>Traffic management</strong>
+    ><strong>Traffic management</strong>
   </div>
   <div class="topbar-actions">
     <span class="connection" [class.is-live]="store.fresh()"
       ><span></span
-      >{{ store.fresh() ? 'Live updates' : store.loading() ? 'Connecting' : 'Updates paused'
-      }}<small>1s</small></span
+      >{{
+        store.fresh() ? 'Live updates' : store.loading() ? 'Connecting' : 'Updates paused'
+      }}</span
     ><button
       class="button button-small button-outline"
       (click)="addJunction.emit()"

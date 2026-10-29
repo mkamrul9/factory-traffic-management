@@ -8,9 +8,9 @@
 }
 .count-label {
   display: inline-block;
-  font: 8px var(--mono);
+  font: 0.75rem var(--mono);
   background: #f2f5ec;
-  color: #8c9b7b;
+  color: var(--muted);
   border: 1px solid #e4e9db;
   border-radius: 4px;
   padding: 2px 5px;
@@ -20,7 +20,7 @@
 .activity-actions select {
   min-height: 29px;
   padding: 5px 28px 5px 10px;
-  font-size: 9px;
+  font-size: 0.75rem;
   width: 150px;
 }
 .activity-list {
@@ -69,21 +69,21 @@
 }
 .activity-content strong {
   display: block;
-  font-size: 10px;
+  font-size: 0.8125rem;
   font-weight: 550;
   color: #5a7050;
 }
 .activity-content p {
-  font-size: 9px;
-  color: #a0a98f;
+  font-size: 0.75rem;
+  color: var(--muted);
   margin-top: 3px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .activity-row time {
-  font: 9px var(--mono);
-  color: #a1aa93;
+  font: 0.75rem var(--mono);
+  color: var(--muted);
   flex: none;
 }
 .activity-footer {
@@ -92,12 +92,13 @@
   align-items: center;
   justify-content: space-between;
   padding: 13px 0;
-  font-size: 8px;
-  color: #a0a88e;
+  font-size: 0.75rem;
+  color: var(--muted);
   gap: 10px;
+  flex-wrap: wrap;
 }
 .activity-footer .text-button {
-  font-size: 9px;
+  font-size: 0.75rem;
 }
 .empty-activity {
   display: flex;
@@ -105,8 +106,8 @@
   justify-content: center;
   gap: 10px;
   padding: 26px;
-  color: #a0aa92;
-  font-size: 11px;
+  color: var(--muted);
+  font-size: 0.875rem;
 }
 @media (max-width: 760px) {
   .activity-card {
@@ -114,26 +115,28 @@
     margin-top: 18px;
   }
   .activity-actions select {
-    width: 120px;
-    font-size: 8px;
+    width: 130px;
+    font-size: 0.75rem;
   }
   .activity-footer {
-    font-size: 7px;
+    font-size: 0.75rem;
   }
   .activity-row {
     gap: 9px;
+    flex-wrap: wrap;
   }
   .activity-row time {
-    font-size: 8px;
+    font-size: 0.75rem;
+    margin-left: 38px;
   }
   .activity-content strong {
-    font-size: 10px;
+    font-size: 0.8125rem;
   }
   .activity-content p {
-    font-size: 8px;
+    font-size: 0.75rem;
   }
   .activity-footer .text-button {
-    font-size: 8px;
+    font-size: 0.75rem;
   }
 }
 @media (max-width: 390px) {

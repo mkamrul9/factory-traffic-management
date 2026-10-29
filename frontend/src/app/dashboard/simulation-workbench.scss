@@ -6,14 +6,6 @@
   padding: 20px 20px 0;
   margin-bottom: 15px;
 }
-.subtle-label {
-  font: 8px var(--mono);
-  padding: 4px 6px;
-  background: #f3f5ef;
-  border: 1px solid #e7ebdf;
-  color: #98a289;
-  border-radius: 4px;
-}
 .tabs {
   display: flex;
   gap: 21px;
@@ -28,8 +20,8 @@
   gap: 6px;
   border: 0;
   background: transparent;
-  color: #9aa58e;
-  font-size: 10px;
+  color: var(--muted);
+  font-size: 0.8125rem;
   padding: 10px 0 12px;
   white-space: nowrap;
 }
@@ -79,12 +71,12 @@
   justify-content: space-between;
   gap: 14px;
   margin-top: 10px;
-  font-size: 8px;
-  color: #a0a990;
+  font-size: 0.75rem;
+  color: var(--muted);
   line-height: 1.7;
 }
 .form-footnote .text-button {
-  font-size: 8px;
+  font-size: 0.75rem;
   white-space: nowrap;
 }
 .clearance-form {
@@ -96,16 +88,16 @@
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  font-size: 8px;
+  font-size: 0.75rem;
   letter-spacing: 0.8px;
-  color: #89987b;
+  color: var(--muted);
   margin-bottom: 11px;
   font-weight: 600;
 }
 .section-label > span:last-child {
   font-weight: 400;
   letter-spacing: 0;
-  color: #a1aa94;
+  color: var(--muted);
 }
 .form-button {
   display: flex;
@@ -113,7 +105,7 @@
 }
 .form-button .button {
   width: 100%;
-  min-height: 39px;
+  min-height: 44px;
 }
 .device-grid {
   display: grid;
@@ -130,7 +122,7 @@
 }
 .device-grid strong {
   display: block;
-  font-size: 10px;
+  font-size: 0.8125rem;
   font-weight: 600;
   margin-bottom: 7px;
 }
@@ -138,8 +130,8 @@
   display: flex;
   justify-content: space-between;
   gap: 4px;
-  font-size: 8px;
-  color: #9ca68f;
+  font-size: 0.75rem;
+  color: var(--muted);
   margin-top: 4px;
 }
 .device-grid b {
@@ -153,7 +145,7 @@
   margin-top: 2px;
 }
 .ack-submit .form-hint {
-  font-size: 8px;
+  font-size: 0.75rem;
   margin: 0;
 }
 @media (max-width: 760px) {
@@ -168,7 +160,7 @@
     padding: 0 16px;
   }
   .tabs > button {
-    font-size: 9px;
+    font-size: 0.75rem;
   }
   .tabs app-icon {
     width: 12px;
@@ -185,7 +177,7 @@
     align-items: end;
   }
   .ack-submit .button {
-    font-size: 9px;
+    font-size: 0.75rem;
     padding: 9px 10px;
   }
 }
@@ -196,8 +188,11 @@
   .input-action {
     gap: 7px;
   }
+  .tabs app-icon {
+    display: none;
+  }
   .input-action .button {
-    font-size: 9px;
+    font-size: 0.75rem;
     padding: 9px;
   }
   .input-action .button app-icon {
@@ -208,5 +203,21 @@
   }
   .form-footnote .text-button {
     margin-top: 5px;
+  }
+}
+@media (max-width: 480px) {
+  .form-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .input-action,
+  .ack-submit {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .input-action .button,
+  .ack-submit .button {
+    font-size: 0.875rem;
+    padding: 10px 13px;
   }
 }

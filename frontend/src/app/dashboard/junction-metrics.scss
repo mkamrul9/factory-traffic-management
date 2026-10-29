@@ -18,8 +18,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #819078;
-  font-size: 10px;
+  color: var(--muted);
+  font-size: 0.8125rem;
   font-weight: 500;
 }
 .metric-icon {
@@ -39,7 +39,7 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  font-size: 30px;
+  font-size: 1.875rem;
   font-weight: 650;
   letter-spacing: -0.9px;
   line-height: 1.4;
@@ -47,22 +47,10 @@
   font-variant-numeric: tabular-nums;
 }
 .metric-text {
-  font-size: 23px;
+  font-size: 1.4375rem;
   letter-spacing: -0.65px;
   min-height: 42px;
   gap: 8px;
-}
-.metric-unit {
-  font-size: 9px;
-  color: #a0aa96;
-  font-weight: 400;
-  letter-spacing: 0;
-  align-self: end;
-  margin-bottom: 9px;
-}
-.metric-caption {
-  font-size: 9px;
-  color: #99a28f;
 }
 @media (min-width: 1600px) {
   .metric {
@@ -74,16 +62,10 @@
     padding: 13px;
   }
   .metric-text {
-    font-size: 20px;
-  }
-  .metric-caption {
-    font-size: 8px;
-  }
-  .metric-unit {
-    display: none;
+    font-size: 1.25rem;
   }
   .metric-top {
-    font-size: 9px;
+    font-size: 0.75rem;
   }
   .metric-icon {
     width: 23px;
@@ -97,10 +79,10 @@
     gap: 10px;
   }
   .metric-value {
-    font-size: 27px;
+    font-size: 1.6875rem;
   }
   .metric-value.metric-text {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
 }
 @media (max-width: 760px) {
@@ -112,14 +94,8 @@
   .metric {
     padding: 14px 15px;
   }
-  .metric-caption {
-    font-size: 9px;
-  }
   .metric-value.metric-text {
-    font-size: 22px;
-  }
-  .metric-unit {
-    display: inline;
+    font-size: 1.375rem;
   }
 }
 @media (max-width: 390px) {
@@ -130,6 +106,6 @@
     padding: 13px 12px;
   }
   .metric-top {
-    font-size: 9px;
+    font-size: 0.75rem;
   }
 }
