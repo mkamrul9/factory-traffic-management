@@ -6,13 +6,13 @@ controller confirmations, and the current time. Each operation returns a new
 immutable state, domain events, and at most one signal request. Nothing in the
 engine imports FastAPI, SQLite, MQTT, or a timer implementation.
 
-## Current integration boundary
+## Integration boundary
 
-The API now runs the engine through a transactional coordinator, persists its
+The API runs the engine through a transactional coordinator, persists its
 state and outgoing commands, and handles real-time ticking, REST acknowledgements,
 timeouts, and device failures. Physical confirmations come from explicit controller
 messages or opt-in simulated execution. Startup and recovery remain DEGRADED
-until fresh ALL RED confirmation and clearance. See [controller demonstration](controller-demo.md).
+until fresh ALL RED confirmation and clearance. See [controller API reference](api.md#controller-simulation-and-acknowledgements).
 
 To inspect the engine without a database or hardware, run from `backend/`:
 

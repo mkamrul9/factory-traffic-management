@@ -36,8 +36,10 @@ request in their generated event sequences.
 ## Demonstrate the same behavior in the dashboard
 
 Start both servers using the [README](../README.md). Open the
-[dashboard](http://127.0.0.1:4200/junctions/A) and follow the
-[control reference](dashboard.md) when locating an input. Use a fresh junction for
+[dashboard](http://127.0.0.1:4200/junctions/A). Enable **Automatic acknowledgements**
+in **Controller simulator** and wait for fresh all-red confirmation and clearance.
+Vehicle, device, and individual controller inputs are in **Simulation workbench**;
+manual intents are in **Manual control**. Use a fresh junction for
 each independent scenario, or clear existing vehicles in Junction A first. New
 junction IDs must be unique; all created junctions use the same engine.
 
