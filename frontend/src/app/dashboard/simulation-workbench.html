@@ -1,0 +1,283 @@
+@if (store.status(); as s) {
+  <section id="simulation" class="card simulation-card" aria-labelledby="simulation-title">
+    <div class="card-heading">
+      <div>
+        <h2 id="simulation-title">Simulation workbench</h2>
+        <p>Send events through the same backend APIs as devices</p>
+      </div>
+      <span class="subtle-label">REST</span>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Simulation type">
+      <button
+        id="traffic-tab"
+        role="tab"
+        [attr.aria-selected]="simulationTab() === 'traffic'"
+        aria-controls="traffic-panel"
+        [class.active]="simulationTab() === 'traffic'"
+        (click)="simulationTab.set('traffic')"
+      >
+        <app-icon name="truck" />Vehicles</button
+      ><button
+        id="devices-tab"
+        role="tab"
+        [attr.aria-selected]="simulationTab() === 'devices'"
+        aria-controls="devices-panel"
+        [class.active]="simulationTab() === 'devices'"
+        (click)="simulationTab.set('devices')"
+      >
+        <app-icon name="chip" />Devices</button
+      ><button
+        id="controller-tab"
+        role="tab"
+        [attr.aria-selected]="simulationTab() === 'controller'"
+        aria-controls="controller-panel"
+        [class.active]="simulationTab() === 'controller'"
+        (click)="simulationTab.set('controller')"
+      >
+        <app-icon name="signal" />Acknowledgements
+      </button>
+    </div>
+    @switch (simulationTab()) {
+      @case ('traffic') {
+        <div
+          id="traffic-panel"
+          role="tabpanel"
+          aria-labelledby="traffic-tab"
+          class="simulation-panel"
+        >
+          <form (ngSubmit)="addVehicle()">
+            <div class="form-row">
+              <div>
+                <label for="vehicle-direction">Approach</label
+                ><select
+                  id="vehicle-direction"
+                  name="vehicleDirection"
+                  [(ngModel)]="vehicleDirection"
+                >
+                  @for (direction of directions; track direction) {
+                    <option [value]="direction">{{ titleCase(direction) }}</option>
+                  }
+                </select>
+              </div>
+              <div>
+                <label for="vehicle-type">Vehicle type</label
+                ><select id="vehicle-type" name="vehicleType" [(ngModel)]="vehicleType">
+                  @for (type of vehicleTypes; track type) {
+                    <option [value]="type">{{ vehicleLabel(type) }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <label for="vehicle-id">Vehicle ID <span class="optional">optional</span></label>
+            <div class="input-action">
+              <input
+                id="vehicle-id"
+                name="vehicleId"
+                [(ngModel)]="vehicleId"
+                maxlength="128"
+                placeholder="A unique ID is generated if left blank"
+              /><button
+                type="submit"
+                class="button button-primary"
+                [disabled]="!store.canWrite() || !vehicleIdValid"
+              >
+                <app-icon name="plus" />Add vehicle
+              </button>
+            </div>
+            @if (!vehicleIdValid) {
+              <p class="inline-error">
+                Use letters, numbers, dots, colons, hyphens, or underscores.
+              </p>
+            }
+            <div class="form-footnote">
+              <span>Emergency vehicles start safe preemption automatically.</span
+              ><button
+                class="text-button"
+                type="button"
+                [disabled]="!store.canWrite() || !store.lastSensorEvent()"
+                (click)="store.resend()"
+              >
+                Resend last event<app-icon name="refresh" />
+              </button>
+            </div>
+          </form>
+          <div class="clearance-form">
+            <div class="section-label">
+              <span>VEHICLE CLEARANCE</span><span>{{ s.queued_vehicles.length }} waiting</span>
+            </div>
+            <div class="input-action">
+              <div class="grow">
+                <label class="sr-only" for="clear-vehicle">Waiting vehicle to clear</label
+                ><select id="clear-vehicle" name="clearVehicle" [(ngModel)]="clearVehicleId">
+                  <option value="">
+                    {{
+                      s.queued_vehicles.length
+                        ? 'Select a waiting vehicle'
+                        : 'No vehicles are waiting'
+                    }}
+                  </option>
+                  @for (vehicle of s.queued_vehicles; track vehicle.vehicle_id) {
+                    <option [value]="vehicle.vehicle_id">
+                      {{ titleCase(vehicle.direction) }} · {{ vehicle.vehicle_id }} ·
+                      {{ vehicleLabel(vehicle.vehicle_type) }}
+                    </option>
+                  }
+                </select>
+              </div>
+              <button
+                class="button button-outline"
+                [disabled]="!store.canWrite() || !clearanceAvailable"
+                (click)="clearVehicle()"
+              >
+                <app-icon name="check" />Clear vehicle
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+      @case ('devices') {
+        <form
+          id="devices-panel"
+          role="tabpanel"
+          aria-labelledby="devices-tab"
+          class="simulation-panel"
+          (ngSubmit)="store.device(deviceType, deviceStatus, deviceDirection)"
+        >
+          <div class="form-row">
+            <div>
+              <label for="device-type">Device</label
+              ><select id="device-type" name="deviceType" [(ngModel)]="deviceType">
+                <option value="SIGNAL_CONTROLLER">Signal controller</option>
+                <option value="SENSOR">Vehicle sensor</option>
+                <option value="SIGNAL">Traffic signal</option>
+              </select>
+            </div>
+            <div>
+              <label for="device-direction">Direction</label
+              ><select
+                id="device-direction"
+                name="deviceDirection"
+                [(ngModel)]="deviceDirection"
+                [disabled]="deviceType === 'SIGNAL_CONTROLLER'"
+              >
+                @for (direction of directions; track direction) {
+                  <option [value]="direction">{{ titleCase(direction) }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div>
+              <label for="device-status">Reported status</label
+              ><select id="device-status" name="deviceStatus" [(ngModel)]="deviceStatus">
+                <option value="ONLINE">Online</option>
+                <option value="OFFLINE">Offline</option>
+                <option value="UNKNOWN">Unknown</option>
+              </select>
+            </div>
+            <div class="form-button">
+              <button type="submit" class="button button-primary" [disabled]="!store.canWrite()">
+                <app-icon name="chip" />Report status
+              </button>
+            </div>
+          </div>
+          <p class="form-hint">
+            An unavailable controller, signal, or sensor pauses traffic control. Bringing a device
+            online starts fresh recovery when all devices are available.
+          </p>
+          <div class="device-grid">
+            @for (direction of directions; track direction) {
+              <div>
+                <strong>{{ titleCase(direction) }}</strong
+                ><span
+                  >Sensor
+                  <b [attr.data-status]="s.sensor_statuses[direction]">{{
+                    titleCase(s.sensor_statuses[direction])
+                  }}</b></span
+                ><span
+                  >Signal
+                  <b [attr.data-status]="s.signal_statuses[direction]">{{
+                    titleCase(s.signal_statuses[direction])
+                  }}</b></span
+                >
+              </div>
+            }
+          </div>
+        </form>
+      }
+      @case ('controller') {
+        <form
+          id="controller-panel"
+          role="tabpanel"
+          aria-labelledby="controller-tab"
+          class="simulation-panel"
+          (ngSubmit)="store.acknowledge(ackCommandId(), ackStatus, ackActual())"
+        >
+          <label for="ack-command">Pending controller command</label
+          ><select
+            id="ack-command"
+            name="ackCommand"
+            [ngModel]="ackCommandId()"
+            (ngModelChange)="selectCommand($event)"
+            [disabled]="!s.pending_commands.length"
+          >
+            @if (!s.pending_commands.length) {
+              <option value="">No pending commands</option>
+            }
+            @for (command of s.pending_commands; track command.command_id) {
+              <option [value]="command.command_id">
+                {{ titleCase(command.direction) }} → {{ titleCase(command.requested_state) }} ·
+                {{ command.command_id.slice(0, 12) }}
+              </option>
+            }
+          </select>
+          <div class="form-row">
+            <div>
+              <label for="ack-status">Response</label
+              ><select id="ack-status" name="ackStatus" [(ngModel)]="ackStatus">
+                <option value="ACK">Acknowledge</option>
+                <option value="FAILED">Report failure</option>
+              </select>
+            </div>
+            <div>
+              <label for="ack-actual">Reported signal state</label
+              ><select
+                id="ack-actual"
+                name="ackActual"
+                [ngModel]="ackActual()"
+                (ngModelChange)="ackActual.set($event)"
+              >
+                <option value="RED">Red</option>
+                <option value="YELLOW">Yellow</option>
+                <option value="GREEN">Green</option>
+              </select>
+            </div>
+          </div>
+          <div class="ack-submit">
+            <span class="form-hint">
+              @if (selectedCommand(); as command) {
+                Deadline {{ command.deadline | date: 'HH:mm:ss' }} · all directions must confirm
+              } @else {
+                {{
+                  s.simulator_auto_ack
+                    ? 'Disable automatic ACKs to inspect pending commands.'
+                    : 'No commands are waiting for a response.'
+                }}
+              }</span
+            ><button
+              type="submit"
+              class="button button-primary"
+              [disabled]="!store.canAcknowledge() || !selectedCommand()"
+            >
+              <app-icon name="check" />Submit response
+            </button>
+          </div>
+          <p class="form-hint">
+            Report a different state or a failure to demonstrate safe fault handling.
+            Acknowledgement never bypasses yellow or clearance.
+          </p>
+        </form>
+      }
+    }
+  </section>
+}

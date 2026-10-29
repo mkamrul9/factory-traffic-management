@@ -1,0 +1,102 @@
+<a class="skip-link" href="#main-content">Skip to content</a>
+@if (menuOpen()) {
+  <button class="nav-backdrop" aria-label="Close navigation" (click)="menuOpen.set(false)"></button>
+}
+<aside class="sidebar" [class.is-open]="menuOpen()">
+  <a class="brand" routerLink="/" (click)="menuOpen.set(false)"
+    ><span class="brand-mark"><app-icon name="road" /></span
+    ><span>FACTORY<span class="brand-sub">TRAFFIC CONTROL</span></span></a
+  >
+  <div class="workspace-label">CONTROL CENTER</div>
+  <nav class="primary-nav" aria-label="Main navigation">
+    <a
+      [routerLink]="['/junctions', store.selectedId() || 'A']"
+      [class.active]="!router.url.includes('#')"
+      (click)="menuOpen.set(false)"
+      ><app-icon name="grid" />Overview<span class="nav-shortcut">01</span></a
+    >
+    <a
+      [routerLink]="['/junctions', store.selectedId() || 'A']"
+      fragment="simulation"
+      [class.active]="router.url.includes('#simulation')"
+      (click)="menuOpen.set(false)"
+      ><app-icon name="settings" />Traffic simulator</a
+    >
+    <a
+      [routerLink]="['/junctions', store.selectedId() || 'A']"
+      fragment="activity"
+      [class.active]="router.url.includes('#activity')"
+      (click)="menuOpen.set(false)"
+      ><app-icon name="activity" />Recent activity</a
+    >
+  </nav>
+  <div class="junction-heading">
+    <span>JUNCTIONS</span
+    ><button
+      class="icon-button"
+      aria-label="Add a junction"
+      (click)="openCreate()"
+      [disabled]="store.busy()"
+    >
+      <app-icon name="plus" />
+    </button>
+  </div>
+  <nav class="junction-nav" aria-label="Junctions">
+    @for (junction of store.junctions(); track junction.junction_id) {
+      <a
+        [routerLink]="['/junctions', junction.junction_id]"
+        [class.selected]="store.selectedId() === junction.junction_id"
+        [attr.aria-current]="store.selectedId() === junction.junction_id ? 'page' : null"
+        (click)="menuOpen.set(false)"
+        ><span class="junction-code">{{ junction.junction_id }}</span
+        ><span>{{ junction.name }}</span>
+        @if (store.selectedId() === junction.junction_id) {
+          <span class="selected-dot"></span>
+        }
+      </a>
+    }
+    @if (store.listError()) {
+      <div class="nav-error">
+        Junctions unavailable<button (click)="store.loadJunctions()">Try again</button>
+      </div>
+    }
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="environment">
+      <app-icon name="chip" /><span>REST SIMULATION<span>Local development</span></span>
+    </div>
+    <a href="http://127.0.0.1:8000/docs" target="_blank" rel="noopener"
+      >API documentation<app-icon name="external"
+    /></a>
+  </div>
+</aside>
+<div class="main-layout">
+  <app-topbar (addJunction)="openCreate()" (toggleMenu)="menuOpen.set(true)" />
+  <main id="main-content"><router-outlet /></main>
+  <footer class="page-footer">
+    <span>Factory Traffic Management System</span
+    ><span
+      >Latest update
+      @if (store.lastUpdated()) {
+        <time>{{ store.lastUpdated() | date: 'HH:mm:ss' }}</time>
+      } @else {
+        <span>—</span>
+      }
+    </span>
+  </footer>
+</div>
+@if (store.notice(); as notice) {
+  <div
+    class="toast"
+    [class]="'toast toast-' + notice.tone"
+    [attr.role]="notice.tone === 'error' ? 'alert' : 'status'"
+  >
+    <app-icon [name]="notice.tone === 'success' ? 'check' : 'alert'" /><span>{{
+      notice.message
+    }}</span
+    ><button class="icon-button" aria-label="Dismiss notification" (click)="store.notice.set(null)">
+      <app-icon name="close" />
+    </button>
+  </div>
+}
+<app-create-junction-dialog #junctionDialog />

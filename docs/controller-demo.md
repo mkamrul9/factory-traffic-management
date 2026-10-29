@@ -1,7 +1,8 @@
 # Live controller demonstration
 
 Start the backend and open [Swagger UI](http://127.0.0.1:8000/docs). No hardware is
-required. The Angular dashboard will provide these controls in the next checkpoint.
+required. These controls are also available in the Angular dashboard; see the
+[browser walkthrough](dashboard.md).
 
 ## Enable automatic simulated execution
 

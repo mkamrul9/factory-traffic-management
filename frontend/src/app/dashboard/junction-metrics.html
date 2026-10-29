@@ -1,0 +1,64 @@
+<div class="metrics-grid" aria-label="Junction summary">
+  <article class="metric">
+    <div class="metric-top">
+      <span>Waiting vehicles</span><span class="metric-icon"><app-icon name="truck" /></span>
+    </div>
+    <div class="metric-value">
+      {{ store.status() ? store.totalWaiting() : '—' }}<span class="metric-unit">vehicles</span>
+    </div>
+    <div class="metric-caption">Across all four approaches</div>
+  </article>
+  <article class="metric">
+    <div class="metric-top">
+      <span>Control mode</span><span class="metric-icon"><app-icon name="settings" /></span>
+    </div>
+    <div class="metric-value metric-text" [attr.data-mode]="store.status()?.mode">
+      {{ store.status() ? titleCase(store.status()!.mode) : '—' }}
+    </div>
+    <div class="metric-caption">
+      {{
+        store.status()?.mode === 'MANUAL'
+          ? 'Operator override active'
+          : store.status()?.mode === 'DEGRADED'
+            ? 'Confirmation or recovery required'
+            : store.status()?.mode === 'EMERGENCY'
+              ? 'Emergency priority active'
+              : 'Backend scheduling decisions'
+      }}
+    </div>
+  </article>
+  <article class="metric">
+    <div class="metric-top">
+      <span>Controller</span><span class="metric-icon"><app-icon name="chip" /></span>
+    </div>
+    <div class="metric-value metric-text">
+      <span class="status-dot" [attr.data-status]="store.status()?.controller_status"></span
+      >{{ store.status() ? titleCase(store.status()!.controller_status) : '—' }}
+    </div>
+    <div class="metric-caption">
+      {{
+        store.status()?.awaiting_confirmation
+          ? 'Awaiting signal confirmation'
+          : 'Latest reported device status'
+      }}
+    </div>
+  </article>
+  <article class="metric">
+    <div class="metric-top">
+      <span>Emergency approaches</span><span class="metric-icon"><app-icon name="shield" /></span>
+    </div>
+    <div class="metric-value">
+      {{ store.status() ? store.status()!.emergency_directions.length : '—'
+      }}<span class="metric-unit">active</span>
+    </div>
+    <div class="metric-caption">
+      {{
+        store.status()
+          ? store.status()!.emergency_directions.length
+            ? 'Safe preemption takes priority'
+            : 'No emergency priority requests'
+          : 'Waiting for backend status'
+      }}
+    </div>
+  </article>
+</div>

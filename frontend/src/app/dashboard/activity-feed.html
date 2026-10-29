@@ -1,0 +1,48 @@
+<section id="activity" class="card activity-card" aria-labelledby="activity-title">
+  <div class="card-heading">
+    <div>
+      <h2 id="activity-title">
+        Recent activity <span class="count-label">{{ store.history().length }}</span>
+      </h2>
+      <p>Traffic decisions, device reports, and operator actions</p>
+    </div>
+    <div class="activity-actions">
+      <label class="sr-only" for="activity-filter">Activity filter</label
+      ><select
+        id="activity-filter"
+        [ngModel]="activityFilter()"
+        (ngModelChange)="activityFilter.set($event)"
+      >
+        <option value="ALL">All events</option>
+        <option value="TRAFFIC">Traffic</option>
+        <option value="SAFETY">Safety & recovery</option>
+        <option value="CONTROL">Control</option>
+      </select>
+    </div>
+  </div>
+  <div class="activity-list">
+    @for (entry of visibleHistory(); track entry.id) {
+      <div class="activity-row">
+        <span class="activity-icon" [attr.data-tone]="activityTone(entry)"
+          ><app-icon [name]="activityIcon(entry)"
+        /></span>
+        <div class="activity-content">
+          <strong>{{ activityTitle(entry) }}</strong>
+          <p [attr.title]="entry.event_id">{{ activityDetail(entry) }}</p>
+        </div>
+        <time [attr.datetime]="entry.timestamp">{{ entry.timestamp | date: 'HH:mm:ss' }}</time>
+      </div>
+    } @empty {
+      <div class="empty-activity">
+        <app-icon name="activity" /><span>No events match this filter.</span>
+      </div>
+    }
+  </div>
+  <div class="activity-footer">
+    <span>Latest 30 backend events · newest first</span
+    ><button class="text-button" (click)="showAllHistory.set(!showAllHistory())">
+      {{ showAllHistory() ? 'Show fewer events' : 'Show all recent events'
+      }}<app-icon name="down" />
+    </button>
+  </div>
+</section>

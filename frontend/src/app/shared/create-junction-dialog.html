@@ -1,0 +1,49 @@
+<dialog #dialog class="create-dialog" aria-labelledby="create-title">
+  <form (ngSubmit)="createJunction()">
+    <div class="dialog-heading">
+      <div>
+        <span class="eyebrow">EXPAND YOUR NETWORK</span>
+        <h2 id="create-title">Add a junction</h2>
+      </div>
+      <button class="icon-button" type="button" aria-label="Close dialog" (click)="dialog.close()">
+        <app-icon name="close" />
+      </button>
+    </div>
+    <p class="muted">Each junction runs independently with its own queues and controller.</p>
+    <label for="new-junction-id">Junction ID</label
+    ><input
+      id="new-junction-id"
+      name="junctionId"
+      [(ngModel)]="newId"
+      maxlength="32"
+      placeholder="e.g. B"
+      required
+      autofocus
+    /><label for="new-junction-name">Junction name</label
+    ><input
+      id="new-junction-name"
+      name="junctionName"
+      [(ngModel)]="newName"
+      maxlength="100"
+      placeholder="e.g. Loading bay"
+      required
+    />
+    <p class="form-hint">
+      IDs use letters, numbers, hyphens, or underscores. Signal timings start at the assessment
+      defaults.
+    </p>
+    @if (store.notice()?.tone === 'error') {
+      <p class="inline-error" role="alert">{{ store.notice()?.message }}</p>
+    }
+    <div class="dialog-actions">
+      <button type="button" class="button button-outline" (click)="dialog.close()">Cancel</button
+      ><button
+        type="submit"
+        class="button button-primary"
+        [disabled]="!validJunction || store.busy()"
+      >
+        {{ store.busy() ? 'Creating…' : 'Create junction' }}<app-icon name="plus" />
+      </button>
+    </div>
+  </form>
+</dialog>

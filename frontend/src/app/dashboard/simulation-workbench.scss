@@ -1,0 +1,212 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+.simulation-card .card-heading {
+  padding: 20px 20px 0;
+  margin-bottom: 15px;
+}
+.subtle-label {
+  font: 8px var(--mono);
+  padding: 4px 6px;
+  background: #f3f5ef;
+  border: 1px solid #e7ebdf;
+  color: #98a289;
+  border-radius: 4px;
+}
+.tabs {
+  display: flex;
+  gap: 21px;
+  padding: 0 20px;
+  border-bottom: 1px solid #e8eddf;
+  overflow-x: auto;
+}
+.tabs > button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: #9aa58e;
+  font-size: 10px;
+  padding: 10px 0 12px;
+  white-space: nowrap;
+}
+.tabs app-icon {
+  width: 14px;
+  height: 14px;
+}
+.tabs > button.active {
+  color: #607d50;
+  font-weight: 600;
+}
+.tabs > button.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #789760;
+  border-radius: 2px;
+}
+.simulation-panel {
+  padding: 19px 20px 20px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 15px;
+}
+.form-row > div {
+  min-width: 0;
+}
+.input-action {
+  display: flex;
+  align-items: stretch;
+  gap: 9px;
+}
+.input-action > input,
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+.form-footnote {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 10px;
+  font-size: 8px;
+  color: #a0a990;
+  line-height: 1.7;
+}
+.form-footnote .text-button {
+  font-size: 8px;
+  white-space: nowrap;
+}
+.clearance-form {
+  border-top: 1px solid #eff1e9;
+  padding-top: 17px;
+  margin-top: 17px;
+}
+.section-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 8px;
+  letter-spacing: 0.8px;
+  color: #89987b;
+  margin-bottom: 11px;
+  font-weight: 600;
+}
+.section-label > span:last-child {
+  font-weight: 400;
+  letter-spacing: 0;
+  color: #a1aa94;
+}
+.form-button {
+  display: flex;
+  align-items: end;
+}
+.form-button .button {
+  width: 100%;
+  min-height: 39px;
+}
+.device-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 20px;
+}
+.device-grid > div {
+  border: 1px solid #e7ecdf;
+  background: #fafcf6;
+  border-radius: 6px;
+  padding: 10px 9px;
+  min-width: 0;
+}
+.device-grid strong {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  margin-bottom: 7px;
+}
+.device-grid span {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  font-size: 8px;
+  color: #9ca68f;
+  margin-top: 4px;
+}
+.device-grid b {
+  font-weight: 500;
+}
+.ack-submit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 2px;
+}
+.ack-submit .form-hint {
+  font-size: 8px;
+  margin: 0;
+}
+@media (max-width: 760px) {
+  .simulation-card .card-heading {
+    padding: 17px 16px 0;
+  }
+  .simulation-panel {
+    padding: 17px 16px;
+  }
+  .tabs {
+    gap: 18px;
+    padding: 0 16px;
+  }
+  .tabs > button {
+    font-size: 9px;
+  }
+  .tabs app-icon {
+    width: 12px;
+    height: 12px;
+  }
+  .device-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .form-footnote {
+    align-items: start;
+    gap: 10px;
+  }
+  .ack-submit {
+    align-items: end;
+  }
+  .ack-submit .button {
+    font-size: 9px;
+    padding: 9px 10px;
+  }
+}
+@media (max-width: 390px) {
+  .form-row {
+    gap: 10px;
+  }
+  .input-action {
+    gap: 7px;
+  }
+  .input-action .button {
+    font-size: 9px;
+    padding: 9px;
+  }
+  .input-action .button app-icon {
+    display: none;
+  }
+  .form-footnote {
+    display: block;
+  }
+  .form-footnote .text-button {
+    margin-top: 5px;
+  }
+}

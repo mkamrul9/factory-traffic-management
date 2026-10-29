@@ -1,0 +1,158 @@
+<div class="intersection-board" [class.stale]="stale()">
+  <svg
+    class="intersection"
+    viewBox="0 0 600 376"
+    role="img"
+    [attr.aria-label]="
+      'Junction ' +
+      status().junction_id +
+      ' confirmed signals: north ' +
+      actual('NORTH') +
+      ', south ' +
+      actual('SOUTH') +
+      ', east ' +
+      actual('EAST') +
+      ', west ' +
+      actual('WEST')
+    "
+  >
+    <defs>
+      <pattern id="ground-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+        <path d="M20 0H0v20" fill="none" stroke="#e2e7e7" stroke-width=".7" />
+      </pattern>
+      <pattern id="crosswalk-horizontal" width="12" height="30" patternUnits="userSpaceOnUse">
+        <rect width="5" height="30" fill="#d4dedf" />
+      </pattern>
+      <pattern id="crosswalk-vertical" width="30" height="12" patternUnits="userSpaceOnUse">
+        <rect width="30" height="5" fill="#d4dedf" />
+      </pattern>
+    </defs>
+    <rect width="600" height="376" fill="#f0f3f2" rx="10" />
+    <rect width="600" height="376" fill="url(#ground-grid)" rx="10" />
+    <path d="M238 0h124v376H238zM0 126h600v124H0z" fill="#34434b" />
+    <path
+      d="M238 0v118M362 0v118M238 258v118M362 258v118M0 126h230M370 126h230M0 250h230M370 250h230"
+      stroke="#bbc8c8"
+      stroke-width="3"
+    />
+    <path
+      d="M300 0v106M300 270v106M0 188h218M382 188h218"
+      stroke="#c4cece"
+      stroke-width="2"
+      stroke-dasharray="12 10"
+    />
+    <path
+      d="M296 0v100M304 0v100M296 276v100M304 276v100M0 184h210M0 192h210M390 184h210M390 192h210"
+      stroke="#e4c77e"
+      stroke-width="1.2"
+      opacity=".7"
+    />
+    <rect x="246" y="100" width="108" height="13" fill="url(#crosswalk-horizontal)" opacity=".65" />
+    <rect x="246" y="263" width="108" height="13" fill="url(#crosswalk-horizontal)" opacity=".65" />
+    <rect x="211" y="134" width="13" height="108" fill="url(#crosswalk-vertical)" opacity=".65" />
+    <rect x="376" y="134" width="13" height="108" fill="url(#crosswalk-vertical)" opacity=".65" />
+    <path
+      d="M269 55v26m-7-7 7 7 7-7M331 320v-26m-7 7 7-7 7 7M94 157h26m-7-7 7 7-7 7M506 219h-26m7-7-7 7 7 7"
+      fill="none"
+      stroke="#d4dddd"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      opacity=".8"
+    />
+    <rect x="254" y="150" width="92" height="76" rx="12" fill="#f7faf8" stroke="#c3d1cc" />
+    <text x="300" y="177" text-anchor="middle" class="center-label">
+      JUNCTION {{ status().junction_id }}
+    </text>
+    <text x="300" y="198" text-anchor="middle" class="center-phase">
+      {{ status().stage === 'ALL_RED' ? 'ALL RED' : status().stage }}
+    </text>
+    <text x="300" y="214" text-anchor="middle" class="center-caption">
+      {{ status().awaiting_confirmation ? 'AWAITING ACK' : 'CONFIRMED' }}
+    </text>
+    <g transform="translate(197,56)">
+      <rect width="28" height="74" rx="7" class="signal-housing" />
+      <circle cx="14" cy="14" r="7" [attr.class]="lamp('NORTH', 'RED')" />
+      <circle cx="14" cy="36" r="7" [attr.class]="lamp('NORTH', 'YELLOW')" />
+      <circle cx="14" cy="58" r="7" [attr.class]="lamp('NORTH', 'GREEN')" />
+      @if (actual('NORTH') === 'UNKNOWN') {
+        <text x="14" y="43" text-anchor="middle" class="unknown-mark">?</text>
+      }
+    </g>
+    <g transform="translate(375,246)">
+      <rect width="28" height="74" rx="7" class="signal-housing" />
+      <circle cx="14" cy="14" r="7" [attr.class]="lamp('SOUTH', 'RED')" />
+      <circle cx="14" cy="36" r="7" [attr.class]="lamp('SOUTH', 'YELLOW')" />
+      <circle cx="14" cy="58" r="7" [attr.class]="lamp('SOUTH', 'GREEN')" />
+      @if (actual('SOUTH') === 'UNKNOWN') {
+        <text x="14" y="43" text-anchor="middle" class="unknown-mark">?</text>
+      }
+    </g>
+    <g transform="translate(377,84)">
+      <rect width="74" height="28" rx="7" class="signal-housing" />
+      <circle cx="14" cy="14" r="7" [attr.class]="lamp('EAST', 'RED')" />
+      <circle cx="36" cy="14" r="7" [attr.class]="lamp('EAST', 'YELLOW')" />
+      <circle cx="58" cy="14" r="7" [attr.class]="lamp('EAST', 'GREEN')" />
+      @if (actual('EAST') === 'UNKNOWN') {
+        <text x="36" y="20" text-anchor="middle" class="unknown-mark">?</text>
+      }
+    </g>
+    <g transform="translate(149,264)">
+      <rect width="74" height="28" rx="7" class="signal-housing" />
+      <circle cx="14" cy="14" r="7" [attr.class]="lamp('WEST', 'RED')" />
+      <circle cx="36" cy="14" r="7" [attr.class]="lamp('WEST', 'YELLOW')" />
+      <circle cx="58" cy="14" r="7" [attr.class]="lamp('WEST', 'GREEN')" />
+      @if (actual('WEST') === 'UNKNOWN') {
+        <text x="36" y="20" text-anchor="middle" class="unknown-mark">?</text>
+      }
+    </g>
+    <g class="road-label">
+      <text x="327" y="36" text-anchor="middle">N</text>
+      <text x="273" y="351" text-anchor="middle">S</text>
+      <text x="561" y="156" text-anchor="middle">E</text>
+      <text x="39" y="222" text-anchor="middle">W</text>
+    </g>
+    <g class="queue-marker">
+      <rect x="255" y="15" width="30" height="25" rx="6" />
+      <text x="270" y="32" text-anchor="middle">{{ status().queues.NORTH }}</text>
+      <rect x="315" y="336" width="30" height="25" rx="6" />
+      <text x="330" y="353" text-anchor="middle">{{ status().queues.SOUTH }}</text>
+      <rect x="544" y="205" width="30" height="25" rx="6" />
+      <text x="559" y="222" text-anchor="middle">{{ status().queues.EAST }}</text>
+      <rect x="26" y="145" width="30" height="25" rx="6" />
+      <text x="41" y="162" text-anchor="middle">{{ status().queues.WEST }}</text>
+    </g>
+  </svg>
+  @if (stale()) {
+    <div class="stale-overlay">
+      <app-icon name="clock" />Last confirmed snapshot · updates paused
+    </div>
+  }
+</div>
+<div class="approach-grid">
+  @for (direction of directions; track direction) {
+    <div
+      class="approach"
+      [class.emergency-approach]="status().emergency_directions.includes(direction)"
+    >
+      <div class="approach-title">
+        <span class="direction-icon" [attr.data-direction]="direction"
+          ><app-icon name="arrow" /></span
+        ><strong>{{ titleCase(direction) }}</strong
+        ><span class="signal-label" [attr.data-signal]="actual(direction)"
+          ><span></span>{{ titleCase(actual(direction)) }}</span
+        >
+      </div>
+      <div class="approach-meta">
+        <span
+          ><b>{{ status().queues[direction] }}</b> waiting</span
+        ><span
+          >Requested
+          <b [attr.data-signal]="status().desired_signals[direction]">{{
+            titleCase(status().desired_signals[direction])
+          }}</b></span
+        >
+      </div>
+    </div>
+  }
+</div>

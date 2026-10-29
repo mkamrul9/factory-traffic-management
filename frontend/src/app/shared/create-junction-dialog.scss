@@ -1,0 +1,40 @@
+:host {
+  display: block;
+}
+.create-dialog {
+  max-width: 460px;
+  width: calc(100% - 32px);
+  border: 1px solid #d6ded5;
+  padding: 26px;
+  border-radius: 14px;
+  box-shadow: 0 24px 80px #13251d30;
+  color: var(--text);
+}
+.create-dialog::backdrop {
+  background: #17281f66;
+  backdrop-filter: blur(2px);
+}
+.dialog-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+}
+.dialog-heading h2 {
+  font-size: 23px;
+  margin: 7px 0 16px;
+}
+.create-dialog .muted {
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 0 0 24px;
+}
+.create-dialog label {
+  display: block;
+  margin: 16px 0 7px;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 25px;
+}

@@ -1,0 +1,149 @@
+@if (store.status(); as s) {
+  <aside class="control-column" aria-label="Traffic controls">
+    <section class="card manual-card" aria-labelledby="manual-title">
+      <div class="card-heading">
+        <div>
+          <h2 id="manual-title">Manual control</h2>
+          <p>Request a safe traffic movement</p>
+        </div>
+        <app-icon name="settings" />
+      </div>
+      <label for="manual-direction">Give priority to</label
+      ><select id="manual-direction" name="manualDirection" [(ngModel)]="manualDirection">
+        @for (direction of directions; track direction) {
+          <option [value]="direction">{{ titleCase(direction) }} approach</option>
+        }
+      </select>
+      <p class="form-hint">The backend serves its compatible road group.</p>
+      <button
+        class="button button-primary button-full"
+        [disabled]="!store.canManual()"
+        (click)="store.command('MANUAL_GREEN_REQUEST', manualDirection)"
+      >
+        <app-icon name="play" />Request green</button
+      ><button
+        class="button button-outline button-full"
+        [disabled]="!store.canWrite() || s.mode !== 'MANUAL'"
+        (click)="store.command('RETURN_TO_AUTOMATIC')"
+      >
+        <app-icon name="refresh" />Return to automatic
+      </button>
+      @if (s.manual_expires_at) {
+        <div class="control-note">
+          <app-icon name="clock" /><span
+            >Override expires at <strong>{{ s.manual_expires_at | date: 'HH:mm:ss' }}</strong></span
+          >
+        </div>
+      } @else {
+        <div class="control-note">
+          <app-icon name="shield" /><span>{{
+            s.mode === 'EMERGENCY'
+              ? 'Emergency priority pauses manual requests.'
+              : !s.control_active
+                ? 'Restore controller confirmation to enable manual control.'
+                : 'Overrides expire after 120 seconds. Safety transitions always apply.'
+          }}</span>
+        </div>
+      }
+    </section>
+    <section class="card controller-card" aria-labelledby="controller-title">
+      <div class="card-heading">
+        <div>
+          <h2 id="controller-title">Controller simulator</h2>
+          <p>Confirm what the controller executes</p>
+        </div>
+        <app-icon name="chip" />
+      </div>
+      <div class="simulator-switch">
+        <div>
+          <strong>Automatic acknowledgements</strong
+          ><span>{{
+            s.simulator_auto_ack ? 'Continuous REST simulation' : 'Explicit confirmation required'
+          }}</span>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-label="Automatic acknowledgements"
+          [attr.aria-checked]="s.simulator_auto_ack"
+          [class.enabled]="s.simulator_auto_ack"
+          [disabled]="!store.canWrite() || (!s.simulator_auto_ack && !store.devicesAvailable())"
+          (click)="store.simulator(!s.simulator_auto_ack)"
+        >
+          <span></span>
+        </button>
+      </div>
+      <dl class="controller-facts">
+        <div>
+          <dt>Current stage</dt>
+          <dd>{{ titleCase(s.stage) }}</dd>
+        </div>
+        <div>
+          <dt>Current group</dt>
+          <dd>
+            {{ s.phase === 'ALL_RED' ? 'All directions red' : s.phase.replaceAll('_', ' / ') }}
+          </dd>
+        </div>
+        <div>
+          <dt>Next decision</dt>
+          <dd>
+            {{
+              s.awaiting_confirmation
+                ? 'Awaiting ACK'
+                : s.control_active && s.stage === 'ALL_RED' && s.target_phase_id === null
+                  ? 'Waiting for traffic'
+                  : s.next_transition_at
+                    ? (s.next_transition_at | date: 'HH:mm:ss')
+                    : 'Paused'
+            }}
+          </dd>
+        </div>
+        <div>
+          <dt>Pending commands</dt>
+          <dd>
+            <span [class.pending-count]="s.pending_commands.length">{{
+              s.pending_commands.length
+            }}</span>
+          </dd>
+        </div>
+      </dl>
+      <button
+        class="button button-outline button-full"
+        [disabled]="!store.canAcknowledge()"
+        (click)="store.acknowledgeBatch()"
+      >
+        <app-icon name="check" />Acknowledge pending batch
+      </button>
+      @if (s.mode === 'DEGRADED') {
+        <button
+          class="button button-recovery button-full"
+          [disabled]="!store.canWrite() || !store.devicesAvailable()"
+          (click)="store.command('RECOVER_CONTROLLER')"
+        >
+          <app-icon name="refresh" />Recover controller
+        </button>
+        <p class="form-hint">
+          {{
+            store.devicesAvailable()
+              ? 'Fresh all-red confirmation and clearance are required before traffic resumes.'
+              : 'Report unavailable devices online in the Devices tab before recovery.'
+          }}
+        </p>
+      }
+      <div class="controller-footnote">
+        <span class="status-dot" [attr.data-status]="s.controller_status"></span>ACK deadline:
+        per-junction configuration
+      </div>
+    </section>
+    <section class="safety-note">
+      <span class="safety-note-icon"><app-icon name="shield" /></span>
+      <div>
+        <h3>Safety is always in control</h3>
+        <p>
+          Manual and emergency requests follow the same yellow and all-red sequence. Unknown signals
+          are never shown as confirmed red.
+        </p>
+      </div>
+    </section>
+  </aside>
+}

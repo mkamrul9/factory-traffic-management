@@ -44,7 +44,7 @@ commands, emergency precedence, and every GREEN/YELLOW/ALL RED transition.
 
 ## 4. Controller simulation, faults, and recovery
 
-Status: implemented and verified; awaiting review.
+Status: completed and reviewed.
 
 - Durable commands through a controller interface and REST ACK simulation.
 - Desired/actual separation, command correlation, timeouts, stale ACKs, and faults.
@@ -58,6 +58,8 @@ controller; restart during each transition and while a command is pending.
 
 ## 5. Angular dashboard
 
+Status: implemented and verified; awaiting review.
+
 - Overview, junction detail, and intersection signals sourced from the backend.
 - Queues, mode, emergency/failure alerts, and desired/actual comparison.
 - Manual controls, vehicle simulation, device status, ACK simulation, and history.
@@ -67,6 +69,8 @@ Review: demonstrate the main scenarios in the browser and verify backend errors
 remain understandable to the operator.
 
 ## 6. Submission verification
+
+Status: pending.
 
 - API examples and a repeatable guide for all nine assessment scenarios.
 - End-to-end checks, clean setup verification, and final documentation.

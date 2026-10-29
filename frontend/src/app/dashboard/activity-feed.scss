@@ -1,0 +1,143 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+.activity-card {
+  margin-top: 22px;
+  padding: 20px 20px 0;
+}
+.count-label {
+  display: inline-block;
+  font: 8px var(--mono);
+  background: #f2f5ec;
+  color: #8c9b7b;
+  border: 1px solid #e4e9db;
+  border-radius: 4px;
+  padding: 2px 5px;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+.activity-actions select {
+  min-height: 29px;
+  padding: 5px 28px 5px 10px;
+  font-size: 9px;
+  width: 150px;
+}
+.activity-list {
+  display: grid;
+}
+.activity-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #f0f2e9;
+}
+.activity-icon {
+  width: 29px;
+  height: 29px;
+  flex: none;
+  border: 1px solid #e6ebdf;
+  background: #f6f8f1;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  color: #8b9b7a;
+}
+.activity-icon app-icon {
+  width: 14px;
+  height: 14px;
+}
+.activity-icon[data-tone='warning'] {
+  color: #a78548;
+  background: #fff9ec;
+  border-color: #eee0bf;
+}
+.activity-icon[data-tone='emergency'] {
+  color: #b96f54;
+  background: #fff4ee;
+  border-color: #edd8c9;
+}
+.activity-icon[data-tone='success'] {
+  color: #7c9863;
+  background: #f2f7e9;
+  border-color: #e0e9cf;
+}
+.activity-content {
+  min-width: 0;
+  flex: 1;
+}
+.activity-content strong {
+  display: block;
+  font-size: 10px;
+  font-weight: 550;
+  color: #5a7050;
+}
+.activity-content p {
+  font-size: 9px;
+  color: #a0a98f;
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.activity-row time {
+  font: 9px var(--mono);
+  color: #a1aa93;
+  flex: none;
+}
+.activity-footer {
+  border-top: 1px solid #edf0e5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 0;
+  font-size: 8px;
+  color: #a0a88e;
+  gap: 10px;
+}
+.activity-footer .text-button {
+  font-size: 9px;
+}
+.empty-activity {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 26px;
+  color: #a0aa92;
+  font-size: 11px;
+}
+@media (max-width: 760px) {
+  .activity-card {
+    padding: 17px 16px 0;
+    margin-top: 18px;
+  }
+  .activity-actions select {
+    width: 120px;
+    font-size: 8px;
+  }
+  .activity-footer {
+    font-size: 7px;
+  }
+  .activity-row {
+    gap: 9px;
+  }
+  .activity-row time {
+    font-size: 8px;
+  }
+  .activity-content strong {
+    font-size: 10px;
+  }
+  .activity-content p {
+    font-size: 8px;
+  }
+  .activity-footer .text-button {
+    font-size: 8px;
+  }
+}
+@media (max-width: 390px) {
+  .activity-footer > span {
+    max-width: 140px;
+  }
+}

@@ -1,0 +1,24 @@
+<header class="topbar">
+  <div class="breadcrumb">
+    <button
+      class="icon-button mobile-menu"
+      aria-label="Open navigation"
+      (click)="toggleMenu.emit()"
+    >
+      <app-icon name="menu" /></button
+    ><span>Control center</span><app-icon name="chevron" /><strong>Traffic management</strong>
+  </div>
+  <div class="topbar-actions">
+    <span class="connection" [class.is-live]="store.fresh()"
+      ><span></span
+      >{{ store.fresh() ? 'Live updates' : store.loading() ? 'Connecting' : 'Updates paused'
+      }}<small>1s</small></span
+    ><button
+      class="button button-small button-outline"
+      (click)="addJunction.emit()"
+      [disabled]="store.busy()"
+    >
+      <app-icon name="plus" />Add junction
+    </button>
+  </div>
+</header>

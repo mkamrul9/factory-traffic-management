@@ -24,6 +24,7 @@ data/
 
 # Angular and build output
 node_modules/
+.npm-cache/
 .angular/
 dist/
 build/

@@ -1,0 +1,105 @@
+<section class="page-heading">
+  <div>
+    <div class="eyebrow">FACTORY ROAD NETWORK</div>
+    <h1>Traffic operations</h1>
+    <p>Monitor flow. Manage priorities. Keep every crossing safe.</p>
+  </div>
+  <button
+    class="button button-outline refresh-button"
+    (click)="store.refresh()"
+    [disabled]="store.loading()"
+  >
+    <app-icon name="refresh" />Refresh
+  </button>
+</section>
+<app-junction-metrics />
+@if (store.status(); as s) {
+  @if (!store.fresh()) {
+    <div class="data-warning" role="alert">
+      <app-icon name="clock" />
+      <div>
+        <strong>Updates paused — controls are disabled</strong
+        ><span>{{
+          store.loadError() ||
+            'The last observation is out of date. The diagram shows the last received state.'
+        }}</span>
+      </div>
+      <button class="text-button" (click)="store.refresh()">Retry</button>
+    </div>
+  }
+  @if (s.emergency_directions.length) {
+    <div class="emergency-banner" role="status">
+      <span class="emergency-symbol"><app-icon name="shield" /></span>
+      <div>
+        <strong>Emergency priority · {{ s.emergency_directions.join(' / ') }}</strong
+        ><span>{{
+          s.mode === 'DEGRADED'
+            ? 'Priority is recorded. Controller recovery is required before traffic can move.'
+            : 'Safe preemption in progress. Yellow and all-red clearance remain in effect.'
+        }}</span>
+      </div>
+      <span class="badge badge-danger">{{ titleCase(s.stage) }}</span>
+    </div>
+  }
+  @if (s.alerts.length) {
+    <section class="alerts-panel" aria-label="Active alerts">
+      <div class="alerts-title">
+        <app-icon name="alert" /><strong>Attention required</strong
+        ><span>{{ s.alerts.length }}</span>
+      </div>
+      <div class="alerts-list">
+        @for (alert of s.alerts; track alert.code + alert.message) {
+          <p>{{ alert.message }}</p>
+        }
+      </div>
+    </section>
+  }
+  <div class="operations-grid">
+    <div class="main-column">
+      <section class="card intersection-card" aria-labelledby="intersection-title">
+        <div class="card-heading">
+          <div>
+            <h2 id="intersection-title">
+              {{ store.selectedName() }} <span class="junction-label">{{ s.junction_id }}</span>
+            </h2>
+            <p>Confirmed signals and waiting traffic</p>
+          </div>
+          <span
+            class="badge"
+            [class.badge-success]="s.control_active"
+            [class.badge-warning]="!s.control_active"
+            ><span class="badge-dot"></span
+            >{{ s.control_active ? 'Control active' : 'Control paused' }}</span
+          >
+        </div>
+        <app-intersection [status]="s" [stale]="!store.fresh()" />
+        <div class="intersection-legend">
+          <span><i class="legend-dot confirmed"></i>Confirmed state</span
+          ><span
+            ><i class="legend-dot requested"></i>Requested state shown below each approach</span
+          >
+        </div>
+      </section>
+      <app-simulation-workbench />
+    </div>
+    <app-control-panel />
+  </div>
+  <app-activity-feed />
+} @else {
+  <section class="card empty-state" [attr.aria-busy]="store.loading()">
+    @if (store.loading()) {
+      <span class="loading-spinner"></span>
+      <h2>Connecting to {{ store.selectedName() }}</h2>
+      <p>Loading junction state and recent activity…</p>
+    } @else {
+      <span class="empty-icon"><app-icon name="alert" /></span>
+      <h2>Unable to load this junction</h2>
+      <p>{{ store.loadError() }}</p>
+      <div>
+        <button class="button button-primary" (click)="store.refresh()">
+          <app-icon name="refresh" />Try again</button
+        ><a class="button button-outline" routerLink="/junctions/A">Open Junction A</a>
+      </div>
+    }
+  </section>
+}

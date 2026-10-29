@@ -1,0 +1,184 @@
+.intersection-board {
+  position: relative;
+  border: 1px solid #e8ece9;
+  border-radius: 11px;
+  overflow: hidden;
+}
+.intersection {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 382px;
+}
+.signal-housing {
+  fill: #142329;
+  stroke: #657278;
+  stroke-width: 1.5;
+}
+.off {
+  fill: #3b4b52;
+}
+.red {
+  fill: #ff706d;
+  filter: drop-shadow(0 0 4px #ff706d88);
+}
+.yellow {
+  fill: #f3c663;
+  filter: drop-shadow(0 0 4px #f3c66388);
+}
+.green {
+  fill: #55d2a0;
+  filter: drop-shadow(0 0 4px #55d2a088);
+}
+.unknown-mark {
+  fill: #d6e0e0;
+  font:
+    700 19px 'Segoe UI',
+    sans-serif;
+}
+.road-label text {
+  fill: #d2dddd;
+  font:
+    600 12px 'Segoe UI',
+    sans-serif;
+}
+.queue-marker rect {
+  fill: #edf6f1;
+  stroke: #b6d1c3;
+}
+.queue-marker text {
+  fill: #1c664b;
+  font:
+    700 13px 'Segoe UI',
+    sans-serif;
+}
+.center-label {
+  fill: #73817b;
+  font:
+    600 9px 'Segoe UI',
+    sans-serif;
+  letter-spacing: 1px;
+}
+.center-phase {
+  fill: #294c3d;
+  font:
+    700 15px 'Segoe UI',
+    sans-serif;
+}
+.center-caption {
+  fill: #7a8a82;
+  font:
+    500 7px 'Segoe UI',
+    sans-serif;
+  letter-spacing: 0.6px;
+}
+.stale .intersection {
+  opacity: 0.6;
+}
+.stale-overlay {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  background: #fff7e7;
+  color: #815d20;
+  border: 1px solid #e8d2a7;
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 11px;
+}
+.stale-overlay app-icon {
+  width: 14px;
+  height: 14px;
+}
+.approach-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+.approach {
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 12px;
+}
+.approach-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+}
+.direction-icon {
+  display: flex;
+  color: #788780;
+}
+.direction-icon app-icon {
+  width: 15px;
+  height: 15px;
+}
+.direction-icon[data-direction='NORTH'] {
+  transform: rotate(180deg);
+}
+.direction-icon[data-direction='EAST'] {
+  transform: rotate(-90deg);
+}
+.direction-icon[data-direction='WEST'] {
+  transform: rotate(90deg);
+}
+.signal-label {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 650;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.signal-label > span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+[data-signal='GREEN'] {
+  color: #16815a;
+}
+[data-signal='RED'] {
+  color: #bf514f;
+}
+[data-signal='YELLOW'] {
+  color: #a87a1a;
+}
+[data-signal='UNKNOWN'] {
+  color: #87928c;
+}
+.approach-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 9px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.approach-meta b {
+  font-weight: 600;
+}
+.emergency-approach {
+  border-color: #edb6ab;
+  background: #fff9f7;
+}
+@media (max-width: 480px) {
+  .approach {
+    padding: 10px;
+  }
+  .approach-meta {
+    font-size: 9px;
+    gap: 3px;
+  }
+  .stale-overlay {
+    font-size: 9px;
+  }
+}

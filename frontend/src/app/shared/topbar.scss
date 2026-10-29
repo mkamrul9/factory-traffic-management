@@ -1,0 +1,106 @@
+:host {
+  display: block;
+}
+.topbar {
+  height: 74px;
+  border-bottom: 1px solid #e3e9e4;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+  gap: 16px;
+}
+.breadcrumb {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 11px;
+  color: #87918b;
+}
+.breadcrumb strong {
+  font-weight: 500;
+  color: #3b4b40;
+}
+.breadcrumb > app-icon {
+  width: 12px;
+  height: 12px;
+  color: #b5bdb6;
+}
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.connection {
+  font-size: 10px;
+  color: #a07838;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.connection > span {
+  width: 6px;
+  height: 6px;
+  background: #b79257;
+  border-radius: 50%;
+}
+.connection small {
+  font-size: 8px;
+  background: #f3f5f2;
+  padding: 3px 5px;
+  border-radius: 4px;
+  color: #839086;
+}
+.connection.is-live {
+  color: #507a5d;
+}
+.connection.is-live > span {
+  background: #6da27d;
+  box-shadow: 0 0 0 3px #edf4ed;
+}
+.mobile-menu {
+  display: none;
+}
+@media (max-width: 1100px) {
+  .topbar {
+    padding: 0 23px;
+  }
+  .topbar-actions {
+    gap: 12px;
+  }
+}
+@media (max-width: 760px) {
+  .mobile-menu {
+    display: flex;
+  }
+  .topbar {
+    height: 64px;
+    padding: 0 16px;
+  }
+  .breadcrumb {
+    gap: 8px;
+    font-size: 10px;
+  }
+  .breadcrumb > span {
+    display: none;
+  }
+  .topbar-actions {
+    gap: 10px;
+  }
+  .connection {
+    font-size: 9px;
+  }
+  .connection small {
+    display: none;
+  }
+  .topbar .button {
+    font-size: 10px;
+    padding: 8px 10px;
+  }
+  .topbar .button app-icon {
+    width: 14px;
+    height: 14px;
+  }
+}

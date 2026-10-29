@@ -2,7 +2,7 @@
 
 A factory junction controller built for the CSI Smart Tech backend assessment.
 The backend uses Python and FastAPI. SQLite stores vehicle queues and audit
-history, and an Angular dashboard will provide the demonstration interface.
+history, and an Angular dashboard provides the demonstration interface.
 
 ## Current status
 
@@ -19,12 +19,15 @@ intents use the same safe transition sequence as normal scheduling.
 Controllers are simulated through REST. Simulation starts disabled. Startup is
 DEGRADED with desired ALL RED and actual UNKNOWN until fresh confirmations and
 clearance complete. Enable the explicit simulator for a continuous demonstration;
-no real hardware or MQTT connection is configured. The Angular dashboard is next.
+no real hardware or MQTT connection is configured. The dashboard shows confirmed
+and requested signals, queues, alerts, manual controls, simulator inputs, and
+recent history. It supports creating and switching between junctions.
 
 ## Run locally
 
-Requirements: Python 3.12 or newer and [uv](https://docs.astral.sh/uv/getting-started/installation/).
-Development has been checked with Python 3.14 on Windows.
+Requirements: Python 3.12 or newer, [uv](https://docs.astral.sh/uv/getting-started/installation/),
+and a Node.js version supported by Angular 21: 20.19+, 22.12+, or 24.x.
+Development has been checked with Python 3.14 and Node.js 24.11.1 on Windows.
 
 From the repository root:
 
@@ -37,6 +40,22 @@ uv run uvicorn factory_traffic.main:app --reload --host 127.0.0.1 --port 8000
 Open [API documentation](http://127.0.0.1:8000/docs), or request
 [GET /api/health](http://127.0.0.1:8000/api/health). The health endpoint reports
 process liveness; it makes no claim about controller availability or traffic safety.
+
+In a second terminal, from the repository root:
+
+```sh
+cd frontend
+npm ci
+npm start
+```
+
+Open the [dashboard](http://127.0.0.1:4200/junctions/A). Enable **Automatic
+acknowledgements** in the Controller simulator card. After fresh ALL RED
+confirmation and the two-second clearance, the junction becomes active. Use the
+Simulation workbench to add and clear vehicles. See the
+[dashboard walkthrough](docs/dashboard.md) for manual, emergency, and fault demos.
+Both development servers bind to localhost. Angular proxies `/api/**` requests to
+the backend; there is no additional frontend environment file to configure.
 
 On startup, migrations run automatically and create the database at
 `backend/data/factory-traffic.sqlite3` when launched from `backend/`. Set the
@@ -106,6 +125,23 @@ partial/late/failed ACKs, device reconnects, actual/desired separation, migratio
 from the earlier schema, and restart during every signal stage. API tests use
 temporary databases; domain tests need no database.
 
+## Check the dashboard
+
+Run from `frontend/`:
+
+```sh
+npm test
+npm run build
+npm run format:check
+```
+
+The Vitest tests cover stale observations, failed and overlapping polls, route
+changes, rejected operations, exact duplicate-event payloads, response validation,
+and rendering UNKNOWN signals separately from requested GREEN. The production
+build is written to `frontend/dist/frontend/browser/`. Serving that bundle requires
+a static server with route fallback and an `/api` reverse proxy; FastAPI currently
+serves the API only. The development setup above is the supported local demo.
+
 ## Project layout
 
 ```text
@@ -121,15 +157,21 @@ backend/
   tests/
     api/             Request, concurrency, and persistence scenarios
     domain/          Signal, scheduling, and engine tests independent of HTTP
+frontend/
+  src/app/
+    core/            API client, response guards, polling store, and DTOs
+    dashboard/       Signals, queues, simulator, controls, and activity components
+    shared/          Navigation header, junction dialog, and SVG icons
+  proxy.conf.json    Local API proxy configuration
 docs/
   api.md             Endpoint reference and runnable request examples
   traffic-control.md Scheduling, transition, and operator policies
   controller-demo.md Live REST demonstration and recovery instructions
+  dashboard.md       Browser walkthrough and frontend behavior
   architecture.md    Boundaries, safety decisions, and persistence design
   implementation-plan.md
 ```
 
-The Angular `frontend/` will be added in the next checkpoint.
 The domain package imports only the Python standard library. Schema definitions
 are in `backend/src/factory_traffic/persistence/migrations/`.
 
@@ -152,8 +194,11 @@ are in `backend/src/factory_traffic/persistence/migrations/`.
 - **Background control:** one nonblocking task ticks all junctions every 100 ms.
   A monotonic clock supplies elapsed intervals; request handlers never sleep to
   advance traffic signals.
-- **Angular, planned:** the dashboard will poll the API and send operator intents.
-  It will display backend decisions rather than run its own signal timers.
+- **Angular:** a signal-based store polls status and recent history every second
+  and sends operator intents through a typed HTTP client. Components display
+  backend decisions. Failed or stale observations disable writes and visibly mark
+  the retained snapshot. The browser does not schedule traffic or confirm lights
+  optimistically.
 
 See [architecture notes](docs/architecture.md) for the intended control flow and
 [implementation plan](docs/implementation-plan.md) for review checkpoints.
@@ -238,6 +283,7 @@ the REST simulator or explicit controller reports; no hardware is connected.
 
 ## AI / Tool Usage
 
-OpenAI Codex assisted with assessment review, project structure, backend
-code, documentation, and test execution. The candidate is responsible for reviewing
+OpenAI Codex assisted with assessment review, project structure, backend and
+frontend code, documentation, test execution, and browser checks. The candidate is
+responsible for reviewing
 the implementation and being able to explain, debug, and modify the submitted work.

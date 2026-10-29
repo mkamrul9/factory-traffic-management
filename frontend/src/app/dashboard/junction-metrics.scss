@@ -1,0 +1,135 @@
+:host {
+  display: block;
+}
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 15px;
+  margin-bottom: 24px;
+}
+.metric {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 16px 17px 15px;
+  min-width: 0;
+}
+.metric-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #819078;
+  font-size: 10px;
+  font-weight: 500;
+}
+.metric-icon {
+  height: 27px;
+  width: 27px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  background: #f3f6ef;
+  color: #829875;
+}
+.metric-icon app-icon {
+  height: 15px;
+  width: 15px;
+}
+.metric-value {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 30px;
+  font-weight: 650;
+  letter-spacing: -0.9px;
+  line-height: 1.4;
+  margin: 9px 0 3px;
+  font-variant-numeric: tabular-nums;
+}
+.metric-text {
+  font-size: 23px;
+  letter-spacing: -0.65px;
+  min-height: 42px;
+  gap: 8px;
+}
+.metric-unit {
+  font-size: 9px;
+  color: #a0aa96;
+  font-weight: 400;
+  letter-spacing: 0;
+  align-self: end;
+  margin-bottom: 9px;
+}
+.metric-caption {
+  font-size: 9px;
+  color: #99a28f;
+}
+@media (min-width: 1600px) {
+  .metric {
+    padding: 19px 22px;
+  }
+}
+@media (max-width: 1150px) {
+  .metric {
+    padding: 13px;
+  }
+  .metric-text {
+    font-size: 20px;
+  }
+  .metric-caption {
+    font-size: 8px;
+  }
+  .metric-unit {
+    display: none;
+  }
+  .metric-top {
+    font-size: 9px;
+  }
+  .metric-icon {
+    width: 23px;
+    height: 23px;
+  }
+  .metric-icon app-icon {
+    width: 13px;
+    height: 13px;
+  }
+  .metrics-grid {
+    gap: 10px;
+  }
+  .metric-value {
+    font-size: 27px;
+  }
+  .metric-value.metric-text {
+    font-size: 20px;
+  }
+}
+@media (max-width: 760px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .metric {
+    padding: 14px 15px;
+  }
+  .metric-caption {
+    font-size: 9px;
+  }
+  .metric-value.metric-text {
+    font-size: 22px;
+  }
+  .metric-unit {
+    display: inline;
+  }
+}
+@media (max-width: 390px) {
+  .metrics-grid {
+    gap: 8px;
+  }
+  .metric {
+    padding: 13px 12px;
+  }
+  .metric-top {
+    font-size: 9px;
+  }
+}
