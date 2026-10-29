@@ -36,7 +36,9 @@ Prettier to source and configuration files.
 The production bundle is emitted to `dist/frontend/browser/`. A production static
 server needs an `index.html` fallback for `/junctions/:id` and an `/api` reverse
 proxy to FastAPI. The Angular development proxy does not ship with the bundle.
-No production hosting is configured.
+`vercel.json` configures the hosted dashboard and proxies API and documentation
+requests to the `BACKEND_URL` environment variable. See the
+[deployment guide](../docs/deployment.md) for the free hosting setup and limits.
 
 ## Structure and state
 

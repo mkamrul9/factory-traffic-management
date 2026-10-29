@@ -43,7 +43,11 @@ class DemoServer:
 
     def start(self) -> None:
         environment = {
-            **{key: value for key, value in os.environ.items() if key != "DATABASE_URL"},
+            **{
+                key: value
+                for key, value in os.environ.items()
+                if key not in {"DATABASE_URL", "FACTORY_TRAFFIC_REQUIRE_POSTGRES"}
+            },
             "FACTORY_TRAFFIC_DB": str(self.database),
         }
         with self.log.open("ab") as output:

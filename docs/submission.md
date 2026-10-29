@@ -44,6 +44,10 @@ Verification results:
 - PostgreSQL deployment work: 19 additional tests passed against a disposable
   PostgreSQL 18 database, including restart, parallel retries, atomic rollback,
   coherent snapshots, and controller scenario parity.
+- The public Render/Neon backend passed arrival, duplicate receipt, manual
+  switching, and emergency preemption checks. An approved service restart
+  retained a queued vehicle, its event receipt, and earlier audit history while
+  resetting physical signals to UNKNOWN and disabling automatic simulation.
 - Frontend: the clean copy passed its original 26 tests and optimized build. The
   subsequent confirmation-label and readability update passed all 28 frontend
   tests, formatting, and an optimized build without budget warnings.
