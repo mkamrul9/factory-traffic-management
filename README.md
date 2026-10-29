@@ -23,6 +23,11 @@ no real hardware or MQTT connection is configured. The dashboard shows confirmed
 and requested signals, queues, alerts, manual controls, simulator inputs, and
 recent history. It supports creating and switching between junctions.
 
+All nine assessment scenarios have passed a live HTTP walkthrough. Clean-source
+installation, 292 backend tests, 26 frontend tests, and the optimized Angular
+build have been verified. See [submission notes](docs/submission.md) for the
+deliverable checklist, verification scope, limitations, and technical review tour.
+
 ## Run locally
 
 Requirements: Python 3.12 or newer, [uv](https://docs.astral.sh/uv/getting-started/installation/),
@@ -103,6 +108,22 @@ simulated. It does not change the database or running API, and it does not wait
 for real time to pass. See [traffic-control rules](docs/traffic-control.md) for the
 algorithm, transition timing, and operator policies.
 
+## Run all nine assessment scenarios
+
+From `backend/`, after dependency installation:
+
+```sh
+uv run python scripts/verify_scenarios.py
+```
+
+This starts a separate localhost backend with a temporary database and checks
+normal/priority traffic, emergency preemption, manual control, duplicate events,
+clearance, controller failure, a real process restart, and concurrent requests.
+It retains the default signal timings and takes about 90 seconds. Your running
+dashboard and its database are not used. See the
+[assessment walkthrough](docs/assessment-demo.md) for expected outcomes and steps
+to demonstrate the same scenarios in the browser.
+
 ## Check the backend
 
 Run from `backend/`:
@@ -157,6 +178,8 @@ backend/
   tests/
     api/             Request, concurrency, and persistence scenarios
     domain/          Signal, scheduling, and engine tests independent of HTTP
+  scripts/
+    verify_scenarios.py  Nine live HTTP scenarios using a disposable backend
 frontend/
   src/app/
     core/            API client, response guards, polling store, and DTOs
@@ -168,6 +191,8 @@ docs/
   traffic-control.md Scheduling, transition, and operator policies
   controller-demo.md Live REST demonstration and recovery instructions
   dashboard.md       Browser walkthrough and frontend behavior
+  assessment-demo.md All nine required scenarios and expected outcomes
+  submission.md      Deliverable checklist, verification, limits, and review tour
   architecture.md    Boundaries, safety decisions, and persistence design
   implementation-plan.md
 ```
@@ -285,5 +310,5 @@ the REST simulator or explicit controller reports; no hardware is connected.
 
 OpenAI Codex assisted with assessment review, project structure, backend and
 frontend code, documentation, test execution, and browser checks. The candidate is
-responsible for reviewing
-the implementation and being able to explain, debug, and modify the submitted work.
+responsible for reviewing the implementation and being able to explain, debug,
+and modify the submitted work.

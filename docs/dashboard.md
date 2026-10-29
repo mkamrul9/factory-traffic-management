@@ -93,6 +93,7 @@ duplicate retries, clearances, manual and emergency control, sensor failure and
 recovery, duplicate/new junction creation, partial and batch ACKs, unknown routes,
 backend disconnection/reconnection, and narrow-screen navigation.
 
-The final submission checkpoint will run the complete assessment walkthrough and
-check setup from a clean environment. No automated browser end-to-end suite or
-production deployment is included yet.
+The [assessment walkthrough](assessment-demo.md) covers all nine required scenarios,
+including a runnable live HTTP driver. [Submission notes](submission.md) record
+the clean-source installation and full verification results. There is no automated
+browser end-to-end suite or production deployment.

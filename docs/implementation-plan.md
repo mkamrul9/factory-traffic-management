@@ -58,7 +58,7 @@ controller; restart during each transition and while a command is pending.
 
 ## 5. Angular dashboard
 
-Status: implemented and verified; awaiting review.
+Status: completed and reviewed.
 
 - Overview, junction detail, and intersection signals sourced from the backend.
 - Queues, mode, emergency/failure alerts, and desired/actual comparison.
@@ -70,7 +70,7 @@ remain understandable to the operator.
 
 ## 6. Submission verification
 
-Status: pending.
+Status: implemented and verified; awaiting review.
 
 - API examples and a repeatable guide for all nine assessment scenarios.
 - End-to-end checks, clean setup verification, and final documentation.
@@ -79,3 +79,11 @@ Status: pending.
 
 Review: follow the README from a clean checkout and explain the algorithm,
 consistency strategy, safety sequence, recovery behavior, and architectural choices.
+
+Verification: a clean source archive installed successfully using both lockfiles.
+All 292 backend tests, 26 frontend tests, backend quality checks, frontend formatting,
+and the optimized Angular build passed. A separate live backend passed all nine
+assessment scenarios using default signal timings and a disposable database.
+See `docs/assessment-demo.md` and `docs/submission.md` for reproduction and scope.
+Repository push and form submission remain pending the candidate's final review
+and repository destination.

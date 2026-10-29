@@ -21,6 +21,7 @@ data/
 *.sqlite3-*
 *.log
 .uv-cache/
+.verification/
 
 # Angular and build output
 node_modules/

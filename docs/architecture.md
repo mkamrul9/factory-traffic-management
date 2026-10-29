@@ -10,7 +10,7 @@ it imports only the Python standard library. `persistence/` implements repositor
 interfaces using SQLite. `controllers/` contains the explicit REST simulator.
 
 ```text
-Angular dashboard (planned) / REST sensor and controller simulator
+Angular dashboard / REST sensor and controller simulator
                             |
                        FastAPI routes
                             |
@@ -33,6 +33,14 @@ The domain engine accepts state, queues, and time. It returns immutable state,
 domain events, and at most one signal request. It contains no timer, transport,
 or database calls. Configured compatible groups partition all four directions.
 Configuration declares physical compatibility; sensor input cannot redefine it.
+
+The Angular HTTP client validates incoming status data before a shared signal-based
+store applies it. It polls status and the latest history together once a second.
+Request ordering prevents late replies from replacing newer observations or a
+different junction's state. A failed poll or observation older than four seconds
+disables writes and labels the retained snapshot as stale. The UI sends intents,
+sensor/device events, and explicit simulated ACKs through the API; it does not
+decide signal sequences or assume successful physical execution.
 
 ## Transactions and consistency
 
