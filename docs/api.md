@@ -16,7 +16,10 @@ OpenAPI document is at [openapi.json](http://127.0.0.1:8000/openapi.json).
 - `GET /api/junctions/{id}/history?limit=50&before_id=123`: newest-first audit
   history. Follow `next_before_id` until it is null. Limit is between 1 and 100.
 
-Manual commands and controller-event endpoints are not implemented yet.
+Manual commands and controller-event endpoints are not exposed yet. Their domain
+logic is implemented and can be inspected with `python -m factory_traffic.simulation`.
+The next integration step will connect engine state, ticking, and correlated
+controller acknowledgements to these APIs. Queue APIs continue to work as before.
 
 ## Create a junction
 

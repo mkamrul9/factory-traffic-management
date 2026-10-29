@@ -3,11 +3,12 @@
 ## Implemented components
 
 `api/` owns HTTP routes and validation models. `domain/` owns vehicle-event rules,
-junction configuration, and validation of individual desired signal snapshots.
+junction configuration, queue scheduling, signal validation, and the standalone
+traffic state machine.
 `application/` owns junction/event use cases and repository interfaces.
 `persistence/` implements those interfaces using SQLite. `main.py` creates the ASGI
 application; initialization and migrations run during its lifespan startup.
-There is no running traffic engine or physical controller yet.
+The domain engine is not connected to the HTTP runtime or physical controllers yet.
 
 The default junction contains two compatible groups. Domain functions accept a
 junction configuration, so another junction can use the same rules. Configuration
@@ -45,6 +46,13 @@ lock timeout. WAL mode allows readers while another connection writes.
 Controller delivery and persisted runtime state are planned. Delivery will happen
 after the transaction commits, with durable pending commands if interrupted.
 
+The domain engine accepts immutable state, waiting vehicles, and an explicit time.
+It returns the next state, audit-worthy events, and at most one new signal request.
+There are no timers, database calls, HTTP imports, or hardware assumptions inside
+it. Complete matching confirmations start signal intervals. Local signal versions
+reject stale or duplicate confirmations; the transport adapter will additionally
+need unique, durable physical command IDs across restarts.
+
 A periodic application task will advance due timers through the same application
 service. Request handlers will not sleep while waiting for signal intervals or ACKs.
 The domain will accept an explicit clock value so timer tests can advance time
@@ -54,7 +62,7 @@ The initial runtime will use one Uvicorn worker. An in-process lock cannot prote
 the same junction across multiple processes. Scaling later requires database
 locking, a single control owner, or a durable per-junction message consumer.
 
-## Planned transition and acknowledgement rules
+## Domain transition rules and planned controller integration
 
 Normal switching, manual requests, and emergency preemption will all follow:
 
@@ -72,6 +80,13 @@ A group transition cannot advance until all required directions are confirmed.
 GREEN service timing starts only after the group is confirmed. Desired and actual
 signals remain separate; unknown physical state is represented explicitly rather
 than treated as RED.
+
+The transition rules and whole-snapshot confirmation gate are implemented in
+`domain/engine.py`. Per-direction command IDs, ACK collection, timeout handling,
+device state, and runtime persistence are the next integration step. Until that
+step, the engine waits indefinitely for a missing confirmation; it never assumes
+an elapsed timeout means a signal changed. The console simulation supplies mock
+confirmations explicitly and does not update physical state in the running API.
 
 Late or duplicate acknowledgements must not overwrite a newer request. A failed,
 mismatched, or timed-out command enters failure mode. Recovery requires fresh

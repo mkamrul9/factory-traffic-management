@@ -18,7 +18,7 @@ This checkpoint does not run traffic control or provide a dashboard.
 
 ## 2. Persistent junctions and vehicle events
 
-Status: implemented and verified; awaiting review.
+Status: completed and reviewed.
 
 - SQLite migrations, seeded Junction A, and repository boundary.
 - Junction APIs, sensor validation, queue arrivals/clearances, and history.
@@ -30,10 +30,14 @@ unknown input, concurrent updates, and queue/history survival after a restart.
 
 ## 3. Traffic engine and operator intents
 
+Status: implemented and verified; awaiting review.
+
 - Deterministic state machine with explicit deadlines and an injected clock.
 - Weighted scheduling, waiting-age protection, and safe timed transitions.
 - Emergency preemption, conflicting emergencies, manual leases, and return to
   automatic control.
+- Runnable domain simulation with explicit simulated confirmations. The running
+  API remains inactive until the controller integration checkpoint.
 
 Review: domain tests for normal traffic, vehicle priority, starvation, manual
 commands, emergency precedence, and every GREEN/YELLOW/ALL RED transition.
@@ -44,6 +48,8 @@ commands, emergency precedence, and every GREEN/YELLOW/ALL RED transition.
 - Desired/actual separation, command correlation, timeouts, stale ACKs, and faults.
 - Background ticking, restart recovery, and reconnect reconciliation.
 - Device-status API and clear alerts.
+- Wire persisted engine state, sensor-triggered decisions, and operator command
+  APIs through the existing serialized application service.
 
 Review: delayed, duplicate, missing, failed, and mismatched ACKs; offline sensor or
 controller; restart during each transition and while a command is pending.

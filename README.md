@@ -11,9 +11,14 @@ idempotent sensor events, per-direction sequence ordering, and paginated audit
 history. Junction A is created automatically. Domain safety checks validate
 signal snapshots independently of the API and database.
 
-The traffic state machine, controller simulator, and Angular dashboard are still
-to be implemented. Status reports desired ALL RED and actual UNKNOWN, with
-`control_active: false`. No physical commands are sent in the current version.
+The standalone traffic engine now implements weighted scheduling, timed safe
+transitions, manual leases, and emergency preemption. It is tested with supplied
+clock values and complete simulated confirmations, independently of HTTP.
+
+Engine runtime wiring, background ticking, REST controller simulation, and the
+Angular dashboard are still to be implemented. The running API continues to
+report desired ALL RED and actual UNKNOWN, with `control_active: false`. No
+physical commands are sent in the current version.
 
 ## Run locally
 
@@ -39,6 +44,20 @@ paths are resolved from the process working directory. The database and its WAL
 files are local runtime data and are excluded from Git. Use one Uvicorn worker.
 
 See [API examples](docs/api.md) for an arrival, retry, and clearance walkthrough.
+
+## Run the traffic engine walkthrough
+
+From `backend/`:
+
+```sh
+uv run python -m factory_traffic.simulation
+```
+
+This advances a simulated clock through normal traffic, emergency preemption,
+manual control, and return to automatic scheduling. Confirmations are explicitly
+simulated. It does not change the database or running API, and it does not wait
+for real time to pass. See [traffic-control rules](docs/traffic-control.md) for the
+algorithm, transition timing, and operator policies.
 
 If uv is unavailable, use a virtual environment and pip instead:
 
@@ -66,10 +85,13 @@ uv run mypy
 
 The safety tests enumerate every combination of the four physical signals and
 check for conflicting movements and overlapping GREEN/YELLOW requests. These
-are snapshot checks; timed transitions and controller acknowledgements will need
-their own tests as the engine is added. API integration tests also cover input
+are snapshot checks. Engine tests verify confirmation gates, full clearance
+intervals, normal scheduling, starvation protection, manual control, and emergency
+handling. Three deterministic mixed-event runs exercise 1,000 actions each while
+checking every emitted signal request. API integration tests also cover input
 validation, transactional rollback, concurrent events across service instances,
-and persistence after restarting the application. Each test uses a temporary database.
+and persistence after restarting the application. API tests use temporary databases;
+domain tests need no database.
 
 ## Project layout
 
@@ -78,14 +100,16 @@ backend/
   src/factory_traffic/
     api/             HTTP routes and response models
     application/     Junction/event use cases and repository interfaces
-    domain/          Configuration and traffic safety rules
+    domain/          Configuration, scheduling, and the traffic state machine
     persistence/     SQLite adapter and versioned SQL migrations
     main.py          ASGI entry point
+    simulation.py    Deterministic domain walkthrough
   tests/
     api/             Request, concurrency, and persistence scenarios
-    domain/          Signal rules independent of HTTP and hardware
+    domain/          Signal, scheduling, and engine tests independent of HTTP
 docs/
   api.md             Endpoint reference and runnable request examples
+  traffic-control.md Scheduling, transition, and operator policies
   architecture.md    Boundaries, safety decisions, and persistence design
   implementation-plan.md
 ```
@@ -117,9 +141,9 @@ See [architecture notes](docs/architecture.md) for the intended control flow and
 
 ## Assumptions / Questions / Requirement Issues
 
-Junction configuration, queue/event policies, and signal snapshot validation
-are implemented. Scheduling, manual/emergency control, and physical-controller
-policies below remain planned until their respective features are implemented.
+Junction configuration, queue/event policies, signal validation, and standalone
+scheduling/manual/emergency logic are implemented. Runtime control and physical
+controller policies below remain planned until controller integration is added.
 
 - **Compatible movements:** NORTH/SOUTH and EAST/WEST are the two groups for
   Junction A. Turning movements and pedestrians are outside this model. Each
@@ -153,17 +177,23 @@ policies below remain planned until their respective features are implemented.
   junction does not change an old event's rejection; submit a new event ID. Malformed
   requests are audited but do not reserve IDs. Unidentifiable requests are retained
   in global audit storage; there is no global audit API yet.
-- **Automatic priority:** a weighted queue score and waiting age will select the
-  next group after its normal service interval. A maximum-wait rule will bound
-  starvation during automatic operation. Exact weights will accompany the engine.
+- **Automatic priority:** score each group using TRUCK=4, FORKLIFT=2, and
+  EMPLOYEE_VEHICLE=1, plus one point per 10 seconds without service. At normal
+  decision points, groups waiting 120 seconds override the score. This is a
+  scheduling threshold; finishing the current service interval, clearance, and
+  confirmations adds delay. Ties retain the current green, then configuration order.
 - **Manual control:** requests will be serialized per junction. The latest accepted
   manual request wins and expires after 120 seconds. An emergency cancels the
   manual lease; automatic scheduling resumes after emergency completion. Manual
-  requests during an emergency or failure will be rejected.
+  requests during an emergency are rejected by the domain engine. Failure-mode
+  rejection will be connected with controller integration.
 - **Emergencies:** explicit clearance normally completes a request. A 120-second
   expiry prevents an abandoned detection from holding the junction indefinitely.
-  Conflicting emergencies will be served by waiting age with bounded service
-  intervals; repeated detections must not renew an existing request indefinitely.
+  Conflicting emergencies begin with the oldest detection, then rotate to a
+  competing group after each 30-second confirmed green interval. The selected
+  group stays fixed through clearance while its emergency remains active. Expiry
+  removes emergency priority, not the queued vehicle, which remains at truck
+  weight until explicitly cleared. Repeated observations do not renew detection age.
 - **Physical state:** no acknowledgement means no confirmation. Use a 3-second
   command timeout, mark uncertain signals UNKNOWN, enter failure mode, and request
   all red where communication allows. Initial scope has no automatic command retry.
