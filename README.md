@@ -4,6 +4,13 @@ A factory junction controller built for the CSI Smart Tech backend assessment.
 The backend uses Python and FastAPI, with SQLite locally and PostgreSQL for the
 hosted demo. An Angular dashboard provides the demonstration interface.
 
+[Live dashboard](https://factory-traffic-management-pi.vercel.app/junctions/A)
+· [API documentation](https://factory-traffic-management-pi.vercel.app/docs)
+
+The free backend can take about a minute to wake after inactivity. After a
+backend restart, enable **Automatic acknowledgements** in the simulator to
+complete fresh all-red recovery. See [hosting limits](docs/deployment.md).
+
 ## Current status
 
 The backend supports persistent junctions, vehicle arrivals and clearances,

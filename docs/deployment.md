@@ -4,6 +4,16 @@ The assessment demo uses Vercel for the Angular dashboard, a free Render web
 service for FastAPI, and a separate Neon Free PostgreSQL database in Singapore.
 Local development continues to use SQLite without any cloud account.
 
+Verified public endpoints on 29 October 2026:
+
+- Dashboard: <https://factory-traffic-management-pi.vercel.app/junctions/A>
+- API documentation: <https://factory-traffic-management-pi.vercel.app/docs>
+- Backend liveness: <https://factory-traffic-api.onrender.com/api/health>
+
+These URLs work without a hosting-account login. After a backend restart or
+idle sleep, enable **Automatic acknowledgements** in the Controller simulator
+card and allow fresh all-red confirmation and clearance before manual control.
+
 The backend owns the timers and controller acknowledgements, so it runs as one
 Uvicorn process. Vercel Functions have an ephemeral filesystem and do not provide
 the continuous control loop this application uses. See

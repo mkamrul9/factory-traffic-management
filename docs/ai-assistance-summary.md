@@ -64,6 +64,13 @@ Nineteen additional hosting/storage tests passed against a disposable PostgreSQL
 database. The Linux Docker image also passed the nine-scenario SQLite walkthrough.
 Provider account permissions and terms were presented to the candidate for approval.
 
+The final free deployment uses Vercel, Render, and Neon. The public dashboard,
+API proxy, Swagger page, and vehicle simulation controls were checked. A hosted
+backend restart retained queued data and history while invalidating previous
+physical confirmations. The public demo and its limitations are documented in
+the README and deployment guide. Account secrets and authentication details are
+excluded from this summary.
+
 ## Scope of assistance
 
 OpenAI Codex was used throughout the collaboration for planning, implementation

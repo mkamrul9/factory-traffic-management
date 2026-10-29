@@ -52,6 +52,12 @@ Verification results:
   subsequent confirmation-label and readability update passed all 28 frontend
   tests, formatting, and an optimized build without budget warnings.
 - Both lockfiles installed successfully into newly created dependency directories.
+- A clean Linux frontend dependency install and production build passed after
+  restoring two missing optional peer-dependency entries in the lockfile.
+- The Vercel production URL served the direct junction route, `/api/health`,
+  `/openapi.json`, and Swagger without login. API responses used `no-store`.
+  Browser checks on that URL covered simulator recovery, vehicle addition,
+  duplicate retry without a queue change, vehicle clearance, and page refresh.
 
 The live nine-scenario driver also passed all nine cases against its own temporary
 database and Uvicorn process using default signal timings. That run used the
@@ -117,3 +123,7 @@ failure rule.
 Submit the [repository URL](https://github.com/mkamrul9/factory-traffic-management)
 or the source archive through the assessment form. Publishing to GitHub does not
 submit the assessment form.
+
+Use <https://factory-traffic-management-pi.vercel.app/junctions/A> as the live demo
+URL. Free backend idle sleep may delay the first response by about a minute;
+fresh simulator recovery is required after the backend wakes.
