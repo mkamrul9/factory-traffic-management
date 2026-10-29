@@ -1,0 +1,148 @@
+# Factory Traffic Management System
+
+A factory junction controller built for the CSI Smart Tech backend assessment.
+The backend uses Python and FastAPI. SQLite will store traffic state and audit
+history, and an Angular dashboard will provide the demonstration interface.
+
+## Current status
+
+The backend foundation is implemented: a runnable API, interactive API docs,
+configurable traffic groups and timings, and tests for signal conflict rules.
+The traffic state machine, queues, persistence, controller simulator, and Angular
+dashboard are still to be implemented. No physical-controller integration is
+active, and the API does not yet control a junction.
+
+## Run locally
+
+Requirements: Python 3.12 or newer and [uv](https://docs.astral.sh/uv/getting-started/installation/).
+Development has been checked with Python 3.14 on Windows.
+
+From the repository root:
+
+```sh
+cd backend
+uv sync --extra dev --locked
+uv run uvicorn factory_traffic.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Open [API documentation](http://127.0.0.1:8000/docs), or request
+[GET /api/health](http://127.0.0.1:8000/api/health). The health endpoint reports
+process liveness; it makes no claim about controller availability or traffic safety.
+
+If uv is unavailable, use a virtual environment and pip instead:
+
+```powershell
+cd backend
+python -m venv .venv
+.\.venv\Scripts\python -m pip install -e ".[dev]"
+.\.venv\Scripts\python -m uvicorn factory_traffic.main:app --reload
+```
+
+The pip alternative uses the dependency ranges in `pyproject.toml`; uv uses the
+exact dependency versions recorded in `uv.lock`. On Linux/macOS, the virtual
+environment's Python executable is `.venv/bin/python`.
+
+## Check the backend
+
+Run from `backend/`:
+
+```sh
+uv run pytest
+uv run ruff check .
+uv run ruff format --check .
+uv run mypy
+```
+
+The safety tests enumerate every combination of the four physical signals and
+check for conflicting movements and overlapping GREEN/YELLOW requests. These
+are snapshot checks; timed transitions and controller acknowledgements will need
+their own tests as the engine is added.
+
+## Project layout
+
+```text
+backend/
+  src/factory_traffic/
+    api/             HTTP routes and response models
+    domain/          Configuration and traffic safety rules
+    main.py          ASGI entry point
+  tests/domain/      Tests independent of HTTP and physical hardware
+docs/
+  architecture.md    Boundaries, safety decisions, and persistence design
+  implementation-plan.md
+```
+
+Application services, database migrations, controller adapters, and `frontend/`
+will be added with the features that use them. The domain package imports only
+the Python standard library.
+
+## Major architectural decisions
+
+- **FastAPI:** request validation and generated OpenAPI documentation at the API
+  boundary. HTTP handlers will call application services rather than decide signals.
+- **Pure Python domain:** traffic decisions remain testable without a running web
+  server, database, or controller. Compatible directions come from configuration.
+- **SQLite, planned:** a local transactional database keeps assessment setup small.
+  The initial deployment will use one backend process; multi-worker control needs
+  stronger coordination than in-process junction locks.
+- **REST controller adapter, planned:** explicit command IDs and acknowledgements
+  will separate desired signals from physical confirmation. MQTT can later use
+  the same application interface.
+- **Angular, planned:** the dashboard will poll the API and send operator intents.
+  It will display backend decisions rather than run its own signal timers.
+
+See [architecture notes](docs/architecture.md) for the intended control flow and
+[implementation plan](docs/implementation-plan.md) for review checkpoints.
+
+## Assumptions / Questions / Requirement Issues
+
+Only junction configuration, timing validation, and signal snapshot validation
+are implemented so far. The operational policies below are the initial
+design and will be verified when their respective features are implemented.
+
+- **Compatible movements:** NORTH/SOUTH and EAST/WEST are the two groups for
+  Junction A. Turning movements and pedestrians are outside this model. Each
+  direction belongs to exactly one configured group; configuration declares
+  which movements are physically compatible.
+- **Signal timing:** use 30 seconds GREEN, 5 seconds YELLOW, and 2 seconds ALL RED.
+  The all-red interval resolves the unspecified clearance duration. Timers start
+  after the relevant controller confirmations, rather than when a request is sent.
+- **Safety precedence:** failure/recovery takes precedence over emergencies,
+  emergencies over manual control, and manual control over automatic scheduling.
+  All operational changes must use the same safe transition logic.
+- **Event identity and ordering:** persist `event_id` for idempotency. Reusing an
+  ID with different content is a conflict. With no sensor ID in the specification,
+  sequence numbers are assumed to belong to a junction/direction stream. Stale
+  sequence numbers are audited without changing queues. Real deployments need a
+  sensor identity and a sequence-reset/reconciliation policy.
+- **Time and queues:** server receipt time determines waiting duration; sensor
+  time is retained for diagnostics and freshness checks. An unmatched clearance
+  is rejected and audited. Vehicle IDs identify waiting vehicles within a junction;
+  repeated arrivals cannot create multiple waiting entries for that vehicle.
+- **Automatic priority:** a weighted queue score and waiting age will select the
+  next group after its normal service interval. A maximum-wait rule will bound
+  starvation during automatic operation. Exact weights will accompany the engine.
+- **Manual control:** requests will be serialized per junction. The latest accepted
+  manual request wins and expires after 120 seconds. An emergency cancels the
+  manual lease; automatic scheduling resumes after emergency completion. Manual
+  requests during an emergency or failure will be rejected.
+- **Emergencies:** explicit clearance normally completes a request. A 120-second
+  expiry prevents an abandoned detection from holding the junction indefinitely.
+  Conflicting emergencies will be served by waiting age with bounded service
+  intervals; repeated detections must not renew an existing request indefinitely.
+- **Physical state:** no acknowledgement means no confirmation. Use a 3-second
+  command timeout, mark uncertain signals UNKNOWN, enter failure mode, and request
+  all red where communication allows. Initial scope has no automatic command retry.
+  An offline controller cannot be forced into a physical safe state by software.
+- **Recovery:** restart or reconnect invalidates earlier physical confirmations.
+  Retain queues, history, and event IDs, reconcile fresh ALL RED acknowledgements,
+  and observe clearance before allowing traffic. Persisted GREEN is never trusted
+  as evidence of current physical state.
+- **Scope:** REST simulation and polling satisfy the assessment. MQTT, production
+  authentication, and deployment infrastructure are deferred until the core works.
+
+## AI / Tool Usage
+
+OpenAI Codex assisted with assessment review, project structure, initial backend
+code, documentation, and test execution. The candidate is responsible for reviewing
+the implementation and being able to explain, debug, and modify the submitted work.
