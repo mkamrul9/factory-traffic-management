@@ -1,10 +1,13 @@
 # Architecture and safety notes
 
-## Implemented foundation
+## Implemented components
 
-`api/` owns HTTP routes. `domain/` owns junction configuration and validation of
-individual desired signal snapshots. `main.py` creates the ASGI application.
-There is no database or running traffic engine yet.
+`api/` owns HTTP routes and validation models. `domain/` owns vehicle-event rules,
+junction configuration, and validation of individual desired signal snapshots.
+`application/` owns junction/event use cases and repository interfaces.
+`persistence/` implements those interfaces using SQLite. `main.py` creates the ASGI
+application; initialization and migrations run during its lifespan startup.
+There is no running traffic engine or physical controller yet.
 
 The default junction contains two compatible groups. Domain functions accept a
 junction configuration, so another junction can use the same rules. Configuration
@@ -15,7 +18,7 @@ The configuration is engineering input, not something sensor events may redefine
 conflicting movements, and simultaneous GREEN/YELLOW requests. It intentionally
 does not claim to validate transition order or actual controller state.
 
-## Planned application flow
+## Application flow
 
 ```text
 Angular dashboard / REST sensor and controller simulator
@@ -24,7 +27,7 @@ Angular dashboard / REST sensor and controller simulator
                           |
           Application service (one lock per junction)
                           |
-                  Traffic domain engine
+              Domain event rules / future traffic engine
                     /              \
         SQLite repository       Controller port
                                    |
@@ -32,10 +35,15 @@ Angular dashboard / REST sensor and controller simulator
 ```
 
 HTTP validation checks incoming shape and identifiers. The application service
-loads a junction under its lock, supplies the current time to the domain engine,
-and commits state, deduplication records, pending commands, and audit entries in
-one database transaction. Controller delivery happens after commit. Pending
-commands remain durable if delivery is interrupted.
+loads a junction under its lock and supplies server receipt time to the domain
+event rules. Queue changes, deduplication receipts, sequence cursors, and audit
+entries commit in one write transaction. Each transaction owns its SQLite
+connection; connections are not shared between request threads. Database reads
+use snapshot transactions, while writes use `BEGIN IMMEDIATE` with a 10-second
+lock timeout. WAL mode allows readers while another connection writes.
+
+Controller delivery and persisted runtime state are planned. Delivery will happen
+after the transaction commits, with durable pending commands if interrupted.
 
 A periodic application task will advance due timers through the same application
 service. Request handlers will not sleep while waiting for signal intervals or ACKs.
@@ -71,20 +79,47 @@ all-red confirmation and clearance before returning to operation. A sensor failu
 will also be reported and handled conservatively; its queue must never be silently
 treated as empty. Detailed fault handling will be tested with the controller work.
 
-## Planned persistence
+## Persistence and event processing
 
-SQLite migrations will introduce junction configuration and runtime state, waiting
-vehicles, processed sensor events, sequence cursors, pending controller commands,
-device state, and audit history. Queue counts will be derived from waiting vehicle
-records. A unique vehicle key and nonnegative counts will prevent double arrival
-and negative-queue errors.
+Versioned SQL migrations currently create junction configuration, waiting vehicles,
+sensor-event receipts, sequence cursors, and audit history. The migration runner
+applies each file and its version record atomically under a write lock. Junction A
+is seeded once with its own audit entry. Migrations never delete existing data.
 
-All junction mutations, including timer ticks and controller acknowledgements,
-will use the same serialized transaction path. A duplicate event will return its
-recorded outcome without mutating the queue again. Rejected and duplicate events
-will leave useful audit entries.
+Queue counts are derived from waiting vehicle records. A `(junction_id, vehicle_id)`
+primary key prevents double arrivals; there is no mutable count that can become
+negative. Event IDs have a global unique key. The original canonical payload and
+outcome are retained even when an otherwise valid event is rejected. A retry
+returns the stored outcome and adds a duplicate audit entry. A conflicting payload
+is rejected without overwriting the original receipt.
 
-On startup, unresolved commands will be marked interrupted and prior physical
-confirmations invalidated. Queues and history survive. Fresh controller recovery
+Sequence cursors are per junction/direction. A higher sequence is processed;
+lower/equal sequences are ignored and recorded. A rejected queue operation still
+advances a fresh stream cursor, preventing delayed detections from reviving an
+already-cleared vehicle. Timestamp freshness failures do not advance the cursor.
+There is no reordering buffer or sensor sequence-reset protocol in this scope.
+
+Malformed requests are audited separately because they cannot always be converted
+into domain events. These audit entries contain sanitized validation errors rather
+than the full request body. Unknown-junction and unidentifiable attempts are stored
+without a foreign key to the junction table. Valid sensor transactions fail with
+503 if persistence fails; their queue, receipt, cursor, and audit writes roll back
+together. If the database itself is unavailable while auditing malformed input,
+the validation response remains 422 and an application error is logged.
+
+History uses decreasing audit IDs for cursor pagination. New entries cannot shift
+older pages. There is currently no retention/cleanup policy; receipts must not be
+deleted casually because they protect against repeated events.
+
+Future timer ticks and controller acknowledgements will use the same serialized
+transaction path. Pending commands, device state, and runtime mode/deadlines will
+be added with that work.
+
+Currently, restart restores configuration, queues, receipts, cursors, and history.
+Status always reports desired ALL RED, actual UNKNOWN, and control inactive.
+These values do not imply that a physical device received an all-red command.
+
+Once controller support exists, unresolved commands will be marked interrupted
+and prior physical confirmations invalidated. Queues and history survive. Fresh controller recovery
 will happen before the engine can issue a new green request. A missed deadline
 will never be interpreted as an acknowledgement.

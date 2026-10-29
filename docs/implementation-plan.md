@@ -6,7 +6,7 @@ Commit subjects describe the change. They do not include milestone numbering.
 
 ## 1. Backend foundation
 
-Status: implemented and verified; awaiting review.
+Status: completed and reviewed.
 
 - FastAPI application, health endpoint, and generated API documentation.
 - Domain configuration and signal conflict validation.
@@ -17,6 +17,8 @@ Review: run the API, inspect `/docs`, read the assumptions, and run the checks.
 This checkpoint does not run traffic control or provide a dashboard.
 
 ## 2. Persistent junctions and vehicle events
+
+Status: implemented and verified; awaiting review.
 
 - SQLite migrations, seeded Junction A, and repository boundary.
 - Junction APIs, sensor validation, queue arrivals/clearances, and history.
